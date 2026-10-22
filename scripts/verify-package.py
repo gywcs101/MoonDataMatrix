@@ -6,7 +6,7 @@ archives=list((root/'_build/publish').glob('gywcs101-datamatrix-0.1.0.zip'))
 assert len(archives)==1
 with zipfile.ZipFile(archives[0]) as archive:
  names=set(archive.namelist())
- required={'README.md','LICENSE','LICENSES/datamatrix-rs-MIT.txt','THIRD_PARTY_NOTICES.md','MIGRATION.md','moon.mod','moon.pkg','planner.mbt','encoder_context.mbt','cmd/main/atomic.c','examples/assets.jsonl','examples/basic/main.mbt','web/index.html','webbridge/bridge.mbt'}
+ required={'README.md','LICENSE','LICENSES/datamatrix-rs-MIT.txt','LICENSES/Apache-2.0.txt','LICENSES/moonbit-core-NOTICE.txt','THIRD_PARTY_NOTICES.md','MIGRATION.md','moon.mod','moon.pkg','planner.mbt','encoder_context.mbt','cmd/main/atomic.c','examples/assets.jsonl','examples/basic/main.mbt','web/index.html','webbridge/bridge.mbt'}
  assert required <= names,required-names
  forbidden={'node_modules','target','_build','.git','.mooncakes','test-results','research','__pycache__'}
  for name in names:

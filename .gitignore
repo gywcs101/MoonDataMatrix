@@ -9,3 +9,4 @@ web/core.js.map
 node_modules/
 test-results/
 __pycache__/
+web/licenses/
