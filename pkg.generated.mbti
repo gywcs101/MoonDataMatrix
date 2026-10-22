@@ -12,10 +12,15 @@ pub fn encode_bytes(Bytes, options? : EncodeOptions) -> Symbol raise EncodeError
 
 pub fn encode_text(String, options? : EncodeOptions) -> Symbol raise EncodeError
 
+pub fn parse_hex(String) -> Bytes raise EncodeError
+
+pub fn render_svg(Symbol, scale? : Int, quiet_zone? : Int) -> String raise EncodeError
+
 // Errors
 pub suberror EncodeError {
   UnsupportedSize
   CapacityExceeded
+  InvalidOption(String)
 } derive(@debug.Debug)
 pub fn EncodeError::to_repr(Self) -> @debug.Repr
 

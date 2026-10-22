@@ -15,6 +15,7 @@ pub(all) struct EncodeOptions {
 pub suberror EncodeError {
   UnsupportedSize
   CapacityExceeded
+  InvalidOption(String)
 } derive(Debug)
 
 ///|
