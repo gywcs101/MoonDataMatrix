@@ -1,0 +1,36 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "gywcs101/datamatrix"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn dimensions_for_codewords(Int, options? : EncodeOptions) -> (Int, Int) raise EncodeError
+
+// Errors
+pub suberror EncodeError {
+  UnsupportedSize
+  CapacityExceeded
+} derive(@debug.Debug)
+pub fn EncodeError::to_repr(Self) -> @debug.Repr
+
+// Types and methods
+pub(all) struct EncodeOptions {
+  shape : Shape
+} derive(Eq)
+pub fn EncodeOptions::equal(Self, Self) -> Bool
+pub fn EncodeOptions::not_equal(Self, Self) -> Bool
+
+pub(all) enum Shape {
+  Square
+  Rectangle
+  Any
+  Fixed(Int, Int)
+} derive(Eq)
+pub fn Shape::equal(Self, Self) -> Bool
+pub fn Shape::not_equal(Self, Self) -> Bool
+
+// Type aliases
+
+// Traits
