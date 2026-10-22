@@ -1,0 +1,28 @@
+import {chromium} from '@playwright/test';
+import {createServer} from 'node:http';
+import {readFile} from 'node:fs/promises';
+import {mkdirSync} from 'node:fs';
+import {resolve,dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import assert from 'node:assert/strict';
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
+const server=createServer(async(req,res)=>{try{const path=req.url==='/'?'index.html':req.url.slice(1);if(!['index.html','app.js','core.js'].includes(path)){res.writeHead(404);return res.end();}res.setHeader('Content-Type',path.endsWith('.js')?'application/javascript':'text/html; charset=utf-8');res.end(await readFile(resolve(root,'web',path)));}catch{res.writeHead(404);res.end();}});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const browser=await chromium.launch();
+try{
+ const page=await browser.newPage({acceptDownloads:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(`http://127.0.0.1:${server.address().port}`);
+ await page.locator('#preview svg').waitFor();
+ await page.locator('[data-example="1"]').click();
+ const output=resolve(root,'test-results');mkdirSync(output,{recursive:true});
+ for(const type of ['svg','png']){
+  const pending=page.waitForEvent('download');await page.locator('#'+type).click();const download=await pending;
+  assert.equal(download.suggestedFilename(),'datamatrix.'+type);await download.saveAs(resolve(output,'browser.'+type));
+ }
+ await page.screenshot({path:resolve(output,'demo.png'),fullPage:true});
+ await page.locator('#kind').selectOption('hex');await page.locator('#input').fill('XX');await page.locator('#generate').click();
+ assert.ok(await page.locator('#error').textContent());assert.ok(await page.locator('#png').isDisabled());assert.equal(await page.locator('#preview svg').count(),0);
+ await page.locator('[data-example="2"]').click();await page.locator('#shape').selectOption('fixed');await page.locator('#size').selectOption('10x10');await page.locator('#generate').click();
+ assert.ok((await page.locator('#error').textContent()).includes('CapacityExceeded'));
+ assert.deepEqual(errors,[]);console.log('Browser preview, stale-output clearing, errors and SVG/PNG downloads passed');
+}finally{await browser.close();server.close();}

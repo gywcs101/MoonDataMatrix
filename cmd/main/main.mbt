@@ -312,7 +312,9 @@ extern "C" fn windows_args() -> FixedArray[String] = "mdm_windows_args"
 ///|
 #cfg(platform="windows")
 fn cli_args() -> Array[String] {
-  [for arg in windows_args() => arg]
+  [
+    for arg in windows_args() => arg
+  ]
 }
 
 ///|
@@ -320,4 +322,3 @@ fn cli_args() -> Array[String] {
 fn cli_args() -> Array[String] {
   @env.args()
 }
-
