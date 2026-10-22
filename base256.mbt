@@ -28,7 +28,13 @@ fn append_base256(
 ///|
 fn data_codewords(data : Bytes, eci : Bool) -> Array[Int] {
   let out = if eci { [241, 27] } else { [] }
-  let ascii = ascii_codewords(data)
+  let mut ascii = ascii_codewords(data)
+  for text in [false, true] {
+    let compact = compact_candidate(data, text)
+    if compact.length() < ascii.length() {
+      ascii = compact
+    }
+  }
   let n = data.length()
   if n > 0 && n <= 1555 && n + (if n <= 249 { 2 } else { 3 }) < ascii.length() {
     append_base256(out, data, 0, n)
