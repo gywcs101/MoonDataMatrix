@@ -1,0 +1,7 @@
+[package]
+name = "moondatamatrix-reference"
+version = "0.0.0"
+edition = "2024"
+publish = false
+[dependencies]
+datamatrix = { git = "https://github.com/jannschu/datamatrix-rs", rev = "af189538aee8f029dd58f317ebd4c006c9837ac2" }

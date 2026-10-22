@@ -27,10 +27,10 @@ fn ascii_codewords(data : Bytes) -> Array[Int] {
 }
 
 ///|
-fn finish(
+fn pad_data(
   codewords : Array[Int],
   options : EncodeOptions,
-) -> Symbol raise EncodeError {
+) -> Size raise EncodeError {
   let s = select_size(codewords.length(), options)
   if codewords.length() < s.capacity {
     codewords.push(129)
@@ -39,6 +39,15 @@ fn finish(
     let value = 129 + 149 * (codewords.length() + 1) % 253 + 1
     codewords.push(if value > 254 { value - 254 } else { value })
   }
+  s
+}
+
+///|
+fn finish(
+  codewords : Array[Int],
+  options : EncodeOptions,
+) -> Symbol raise EncodeError {
+  let s = pad_data(codewords, options)
   let ecc = error_code(codewords, s)
   for b in ecc {
     codewords.push(b)
@@ -55,7 +64,7 @@ pub fn encode_bytes(
   if data.length() > 3116 {
     raise CapacityExceeded
   }
-  finish(planned_codewords(data, false), options)
+  finish(planned_codewords(data, false, options), options)
 }
 
 ///|
@@ -68,5 +77,5 @@ pub fn encode_text(
   if data.length() > 3116 {
     raise CapacityExceeded
   }
-  finish(planned_codewords(data, true), options)
+  finish(planned_codewords(data, true, options), options)
 }
