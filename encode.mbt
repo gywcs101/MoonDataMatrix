@@ -55,7 +55,7 @@ pub fn encode_bytes(
   if data.length() > 3116 {
     raise CapacityExceeded
   }
-  finish(data_codewords(data, false), options)
+  finish(planned_codewords(data, false), options)
 }
 
 ///|
@@ -68,5 +68,5 @@ pub fn encode_text(
   if data.length() > 3116 {
     raise CapacityExceeded
   }
-  finish(data_codewords(data, true), options)
+  finish(planned_codewords(data, true), options)
 }
