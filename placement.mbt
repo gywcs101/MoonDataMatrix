@@ -147,4 +147,3 @@ fn place(data : Array[Int], s : Size) -> Symbol {
   }
   Symbol::{ w: s.width, h: s.height, cells: matrix, }
 }
-

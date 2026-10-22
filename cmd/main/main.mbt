@@ -1,7 +1,7 @@
 ///|
-/// Entry point for the CLI or runnable program in this template.
-/// Keep main focused; move logic into the library package.
-/// Run with `moon run cmd/main` from the project root.
-fn main {
-  println("Hello")
+fn main raise {
+  let symbol = @lib.encode_text("MoonDataMatrix")
+  for row in symbol.matrix() {
+    println(row.map(fn(v) { if v { "██" } else { "  " } }).join(""))
+  }
 }

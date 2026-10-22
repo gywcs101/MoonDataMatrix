@@ -8,6 +8,10 @@ import {
 // Values
 pub fn dimensions_for_codewords(Int, options? : EncodeOptions) -> (Int, Int) raise EncodeError
 
+pub fn encode_bytes(Bytes, options? : EncodeOptions) -> Symbol raise EncodeError
+
+pub fn encode_text(String, options? : EncodeOptions) -> Symbol raise EncodeError
+
 // Errors
 pub suberror EncodeError {
   UnsupportedSize
@@ -30,6 +34,14 @@ pub(all) enum Shape {
 } derive(Eq)
 pub fn Shape::equal(Self, Self) -> Bool
 pub fn Shape::not_equal(Self, Self) -> Bool
+
+pub struct Symbol {
+  // private fields
+}
+pub fn Symbol::height(Self) -> Int
+pub fn Symbol::matrix(Self) -> Array[Array[Bool]]
+pub fn Symbol::module_at(Self, Int, Int) -> Bool?
+pub fn Symbol::width(Self) -> Int
 
 // Type aliases
 
