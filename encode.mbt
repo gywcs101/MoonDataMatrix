@@ -55,7 +55,7 @@ pub fn encode_bytes(
   if data.length() > 3116 {
     raise CapacityExceeded
   }
-  finish(ascii_codewords(data), options)
+  finish(data_codewords(data, false), options)
 }
 
 ///|
@@ -68,9 +68,5 @@ pub fn encode_text(
   if data.length() > 3116 {
     raise CapacityExceeded
   }
-  let out = [241, 27]
-  for b in ascii_codewords(data) {
-    out.push(b)
-  }
-  finish(out, options)
+  finish(data_codewords(data, true), options)
 }
