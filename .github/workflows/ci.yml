@@ -1,0 +1,16 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  core:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: moonbitlang/setup-moonbit@v1
+      - run: moon version --all
+      - run: moon check --target native --deny-warn
+      - run: moon test --target native --deny-warn
+      - run: moon build --target native --deny-warn
+      - run: moon fmt --check
