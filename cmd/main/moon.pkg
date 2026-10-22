@@ -1,5 +1,18 @@
 import {
   "gywcs101/datamatrix" @lib,
+  "moonbitlang/core/env",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+  "moonbitlang/core/string",
+  "moonbitlang/x/fs",
+  "moonbitlang/x/sys",
 }
 
+supported_targets = "native"
+
 pkgtype(kind: "executable")
+
+options(
+  "native-stub": [ "atomic.c" ],
+)

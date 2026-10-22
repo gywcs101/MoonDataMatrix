@@ -4,6 +4,7 @@ package "gywcs101/datamatrix/cmd/main"
 // Values
 
 // Errors
+type CliError
 
 // Types and methods
 
