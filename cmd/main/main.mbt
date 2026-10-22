@@ -23,6 +23,9 @@ fn fail(code : Int, message : String) -> Unit raise CliError {
 
 ///|
 fn read_bytes(path : String) -> Bytes raise CliError {
+  if path.contains("\u0000") {
+    raise CliError(2, "path contains NUL")
+  }
   @fs.read_file_to_bytes(path) catch {
     _ => raise CliError(4, "cannot read file: \{path}")
   }

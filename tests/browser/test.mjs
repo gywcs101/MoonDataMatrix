@@ -1,6 +1,6 @@
 import {chromium} from '@playwright/test';
 import {createServer} from 'node:http';
-import {readFile} from 'node:fs/promises';
+import {readFile,writeFile} from 'node:fs/promises';
 import {mkdirSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -19,6 +19,12 @@ try{
   const pending=page.waitForEvent('download');await page.locator('#'+type).click();const download=await pending;
   assert.equal(download.suggestedFilename(),'datamatrix.'+type);await download.saveAs(resolve(output,'browser.'+type));
  }
+ const svg=await readFile(resolve(output,'browser.svg'),'utf8');
+ const raster=await page.evaluate(async svg=>{
+  const image=new Image();const url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));
+  try{image.src=url;await image.decode();const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;canvas.getContext('2d').drawImage(image,0,0);return canvas.toDataURL('image/png').split(',')[1];}finally{URL.revokeObjectURL(url);}
+ },svg);
+ await writeFile(resolve(output,'browser-svg-rendered.png'),Buffer.from(raster,'base64'));
  await page.screenshot({path:resolve(output,'demo.png'),fullPage:true});
  await page.locator('#kind').selectOption('hex');await page.locator('#input').fill('XX');await page.locator('#generate').click();
  assert.ok(await page.locator('#error').textContent());assert.ok(await page.locator('#png').isDisabled());assert.equal(await page.locator('#preview svg').count(),0);

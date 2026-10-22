@@ -15,3 +15,5 @@ description = "Data Matrix ECC 200 encoder in MoonBit"
 import {
   "moonbitlang/x@0.5.4",
 }
+
+repository = "https://github.com/gywcs101/MoonDataMatrix"
