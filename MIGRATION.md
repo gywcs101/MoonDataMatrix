@@ -1,4 +1,4 @@
-# Migration record
+# Port provenance and compatibility
 
 ## Source
 
@@ -18,11 +18,11 @@
 
 ## Optimizer
 
-The earlier original conservative segment planner was replaced by the upstream state-machine optimizer. Fractions retain the upstream fixed denominator 12. Generic Rust plan variants are represented by a private MoonBit state structure; copying a candidate explicitly copies its switch array.
+The six-mode optimizer is ported from the pinned upstream implementation. The public API automatically selects encoding modes.
 
 One deliberate determinism adjustment: upstream uses an unstable cost-only sort before pruning. Equal-cost order can depend on the language/runtime sorting implementation. This port uses the upstream final tie preferences (maximum mode complexity, then switch count) during that sorting step too, with stable order for exact ties. It does not change primary cost ordering. A UTF-8 ECI `Hello, World!` regression covers this adjustment. No universal global-optimality claim is made.
 
-The pinned Rust reference runner compares padded data codewords, complete data/ECC codewords and every matrix cell. The current deterministic corpus has 172 cases, including all 30 sizes, mode-oriented alphabets, binary length boundaries and 144×144. All matched exactly in the local run. This is regression evidence, not a proof for all inputs.
+The pinned Rust reference runner compares padded data codewords, complete data/ECC codewords and every matrix cell. The current deterministic corpus has 172 cases, including all 30 sizes, mode-oriented alphabets, binary length boundaries and 144×144. All matched exactly in the recorded validation. This is regression evidence, not a proof for all inputs.
 
 ## Intentional API differences
 
@@ -33,8 +33,8 @@ The pinned Rust reference runner compares padded data codewords, complete data/E
 - SVG output and native CLI/browser adapters are original implementations.
 - The 144×144 block ordering follows the pinned upstream; interoperability is checked with ZXing-C++ 2.3.0. Historical scanner compatibility is not guaranteed.
 
-## Toolchain
+## Runtime compatibility
 
-Development uses moonc `0.10.14+7d59c7ec9`. CLI dependency `moonbitlang/x@0.5.4` is selected for compatibility: 0.5.6 uses `Int32`, which this compiler does not recognize. Do not modify dependency caches to mask incompatibility.
+The source distribution supports moonc `0.10.14+7d59c7ec9` with CLI dependency `moonbitlang/x@0.5.4`. The core depends only on the MoonBit standard library.
 
-On Windows this toolchain's non-MSVC argument reader is not Unicode-safe. The original C adapter obtains wide command-line arguments through the Windows API. Encoding and JSONL processing remain in MoonBit.
+The native CLI supports Unicode command-line arguments on Windows through a C adapter using Windows APIs. Encoding and JSONL processing run in MoonBit.

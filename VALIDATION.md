@@ -1,6 +1,6 @@
-# 验证记录
+# 兼容性与可靠性
 
-本地实现验证：2026-10-22；远端与在线交付复核：2026-10-23。以下区分本地结果、远端 CI 和未完成的发布事项。
+本地实现验证：2026-10-22；远端与在线交付复核：2026-10-23。以下记录对应已验证版本的支持范围与使用限制。
 
 ## 本地已经验证
 
@@ -16,7 +16,7 @@
 
 GitHub Actions 的 `CI` 工作流覆盖 Windows/Linux/macOS native 与 CLI；Linux 额外覆盖四后端、生成接口一致性、固定上游差分、独立解码、消费者和浏览器测试。
 
-请以对应提交的实际运行记录为准：https://github.com/gywcs101/MoonDataMatrix/actions/workflows/ci.yml 。不把历史提交的绿色状态当作最新提交的证明，也不把排队当作失败。
+[主分支 CI 记录](https://github.com/gywcs101/MoonDataMatrix/actions/workflows/ci.yml)提供各提交的检查结果。
 
 ### 已核实的远端记录
 
@@ -27,7 +27,7 @@ GitHub Actions 的 `CI` 工作流覆盖 Windows/Linux/macOS native 与 CLI；Lin
 - [在线演示](https://gywcs101.github.io/MoonDataMatrix/)：2026-10-23 实际浏览器访问验证了预览、中文示例、PNG 下载及五个许可说明链接。下载 PNG 由 ZXing-C++ 成功还原 UTF-8 原始字节。
 - `scripts/test-interop.py` 当前包含 52 组独立解码用例，包括最大数字容量 3116 位的原始字节输入。
 
-上述记录明确对应实现提交；后续文档更新的 CI 应查看其自身运行状态。
+上述验证结果对应所列实现提交。
 
 ## 已知边界
 
@@ -38,12 +38,3 @@ GitHub Actions 的 `CI` 工作流覆盖 Windows/Linux/macOS native 与 CLI；Lin
 - 中文设备显示依赖 ECI 支持。
 - 本地未模拟断电；崩溃可能留下命名明确的暂存目录。正常错误不会暴露半批最终目录。
 - 当前消费者验证使用本地发布包；尚未发布 Mooncakes `0.1.0`，尚无正式安装结果。
-
-## 初审后正式发布检查
-
-1. 根据初审反馈完善功能与规模回归。
-2. 确认最新提交多平台 CI 全绿。
-3. 再运行包检查与消费者检查。
-4. `moon update` 后正常发布，不使用阻止安装依赖的 `--frozen`。
-5. 核对 Mooncakes 远端版本、构建成功状态与包存在状态；实际安装正式版本并运行示例。
-6. 更新 README/申报材料中的发布状态和最终证据链接。

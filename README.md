@@ -4,7 +4,7 @@
 
 MoonBit 实现的 **Data Matrix ECC 200 编码库**，附原生命令行工具和完全在本地运行的浏览器演示。
 
-**[在线演示](https://gywcs101.github.io/MoonDataMatrix/)** · [初审申报书](SUBMISSION.md) · [验证记录](VALIDATION.md)
+**[在线演示](https://gywcs101.github.io/MoonDataMatrix/)** · [兼容性与可靠性](VALIDATION.md)
 
 当前为 `0.1.0` 发布准备阶段，尚未发布到 Mooncakes。GitHub 主分支可直接构建。项目不宣称通过 ISO 全条款认证。
 
@@ -18,30 +18,43 @@ MoonBit 实现的 **Data Matrix ECC 200 编码库**，附原生命令行工具�
 - 黑码白底 SVG，默认 2 模块静区、4 倍缩放；浏览器可导出整数像素 PNG。
 - CLI 支持单条输入和 JSONL 批处理，拒绝覆盖已有输出。
 
-首版不包含 GS1、DMRE、解码、摄像头、Structured Append、Macro 05/06 自动转换、标签排版和打印质量认证。中文显示取决于扫描器的 ECI 支持；空负载在 ZXing-C++ 默认识别流程中没有返回结果。144×144 采用固定上游的交织方式，不保证所有历史扫描器兼容。
+**首版范围外**：GS1、DMRE、解码、摄像头、Structured Append、Macro 05/06 自动转换、标签排版和打印质量认证。
+
+**读取兼容性**：中文显示取决于扫描器的 ECI 支持；空负载在 ZXing-C++ 默认识别流程中没有返回结果。144 × 144 采用固定上游的交织方式，不保证所有历史扫描器兼容。
 
 ## 快速开始
 
-开发基线：`moonc v0.10.14+7d59c7ec9`、`moon 0.1.20260920`。CI 固定此版本；CLI 适配层使用 `moonbitlang/x@0.5.4`，编码核心仅依赖标准库。
+源码运行环境：`moonc v0.10.14+7d59c7ec9`、`moon 0.1.20260920`。CLI 使用 `moonbitlang/x@0.5.4`，编码核心仅依赖标准库。
 
 ```sh
 git clone https://github.com/gywcs101/MoonDataMatrix.git
 cd MoonDataMatrix
 moon update
-moon check --target all --deny-warn
-moon test --target all --deny-warn
 moon run examples/basic --target native
 ```
 
-最后一条命令输出中文标签的 SVG。正式发布后才可用 `moon add gywcs101/datamatrix` 安装；当前独立集成方式见 `scripts/test-consumer.py`，它从实际发布压缩包创建独立工作区。
+最后一条命令输出中文标签的 SVG。当前尚不能从 Mooncakes 安装本项目，请使用仓库源码。
+
+### 在自己的应用中使用
+
+将本仓库与已有 MoonBit 应用（以下名为 `myapp`）放在同一个父目录，在该父目录运行：
+
+```sh
+moon work init
+moon work use MoonDataMatrix myapp
+```
+
+在应用的 `moon.mod` 中将 `"gywcs101/datamatrix@0.1.0"` 加入 `import` 块，再在使用该库的包中添加下面的导入。工作区会使用本地源码模块；`0.1.0` 是源码版本号，不表示已发布到 Mooncakes。
 
 ## 库接口
 
-包别名取决于消费者自己的 `moon.pkg`；例如：
+在应用包的 `moon.pkg` 中添加导入（已有 `import` 块时合并条目）：
 
-```moonbit
+```text
 import { "gywcs101/datamatrix" @datamatrix }
 ```
+
+使用示例：
 
 ```moonbit
 fn main raise {
@@ -52,7 +65,16 @@ fn main raise {
 }
 ```
 
-指定选项：`options={shape: Fixed(32, 32)}`，或 `Square`、`Rectangle`、`Any`。固定尺寸参数按 **宽、高** 排列，例如 `Fixed(18, 8)`。
+通过 `options` 参数选择形状，例如 `options={shape: Fixed(32, 32)}`。
+
+| 形状选项 | 行为 |
+| --- | --- |
+| `Square` | 自动选择方形，默认选项 |
+| `Rectangle` | 自动选择经典矩形 |
+| `Any` | 从全部 30 种经典尺寸中选择 |
+| `Fixed(width, height)` | 指定尺寸，例如 `Fixed(18, 8)` |
+
+固定尺寸参数按 **宽、高** 排列。
 
 `Symbol` 的内部矩阵不可由调用者修改；`matrix()` 返回副本，`module_at(x, y)` 在越界时返回 `None`。错误类型区分 `UnsupportedSize`、`CapacityExceeded`、`InvalidOption`。
 
@@ -60,7 +82,7 @@ fn main raise {
 
 `render_svg(symbol, scale=4, quiet_zone=2)` 支持 1～1024 的整数缩放和静区；静区至少为 1。输出不嵌入原始负载，不支持颜色、Logo 或装饰效果。
 
-## CLI
+## 命令行工具
 
 ```sh
 moon run cmd/main --target native -- encode --text "Hello, World!" --output hello.svg
@@ -70,15 +92,26 @@ moon run cmd/main --target native -- encode --binary-file payload.bin --output p
 moon run cmd/main --target native -- batch --input examples/assets.jsonl --output asset-labels
 ```
 
+`payload.bin` 表示用户准备的二进制文件。上述命令应在仓库根目录运行。
+
 单条输入四选一，省略 `--output` 则输出 SVG 到标准输出。可添加 `--shape square|rectangle|any` 或 `--size WIDTHxHEIGHT`，二者互斥。十六进制必须是偶数个有效字符，不自动删除空格。
 
-退出码：成功 0、参数错误 2、输入或编码错误 3、文件读写错误 4。诊断只写标准错误。封装启动器可能另有自己的退出码；测试直接定位实际构建的程序验证这些约定，不依赖固定构建目录。
+诊断只写标准错误，程序自身的退出码如下；通过 `moon run` 等启动器调用时，启动器可能转换退出码。
+
+| 退出码 | 含义 |
+| --- | --- |
+| `0` | 成功 |
+| `2` | 参数错误 |
+| `3` | 输入或编码错误 |
+| `4` | 文件读写错误 |
 
 已有文件绝不覆盖；先生成全部内容，再在同一文件系统暂存并使用不替换目标的原子重命名。操作系统崩溃可能留下 `.tmp-*` 暂存目录，不能将其当作最终结果。
 
 ### JSONL 批次规则
 
-```json
+输入文件每行是一个独立 JSON 对象，例如：
+
+```jsonl
 {"id":"asset-0001","text":"ASSET-2026-0001"}
 {"id":"asset-0002","hex":"00ff01"}
 ```
@@ -94,7 +127,7 @@ python scripts/build-web.py
 python -m http.server --directory web 8080
 ```
 
-打开 `http://localhost:8080`。页面支持文本/十六进制、尺寸选择、预览、SVG/PNG 下载和三组示例。输入变化会清除旧结果，避免下载错误对应的图片。所有编码和 SVG 生成调用编译出的 MoonBit JS；页面仅处理交互与 Canvas PNG 绘制，无上传、登录或历史记录。
+打开 [本地演示](http://localhost:8080)。页面支持文本/十六进制、尺寸选择、预览、SVG/PNG 下载和三组示例。输入变化会清除旧结果，避免下载错误对应的图片。所有编码和 SVG 生成调用编译出的 MoonBit JS；页面仅处理交互与 Canvas PNG 绘制，无上传、登录或历史记录。
 
 ## 三个可复用场景
 
@@ -102,43 +135,14 @@ python -m http.server --directory web 8080
 2. **中文样本标签**：使用浏览器的“中文样本”示例，预览并下载 SVG 或 PNG；用支持 ECI 的扫描器还原中文与 emoji。
 3. **二进制设备数据**：通过字节文件或十六进制输入保留零字节和高位字节，独立解码器逐字节比较，无隐式字符集猜测。
 
-## 验证
+## 兼容性与可靠性
 
-```sh
-moon check --target all --deny-warn
-moon build --target all --deny-warn
-moon test --target all --deny-warn
-moon fmt --check
-moon info
-python -m pip install -r requirements-dev.txt
-python scripts/test-interop.py
-python scripts/test-cli.py
-python scripts/verify-package.py
-python scripts/test-consumer.py
-```
+核心已在 native、JS、wasm、wasm-gc 四种后端验证，原生 CLI 覆盖 Windows、Linux、macOS。172 组用例与固定上游实现的码字、纠错和矩阵完全一致；52 组独立解码用例覆盖中文、二进制及全部经典尺寸。网页下载图片也经过独立解码验证。
 
-Rust 仅用于开发差分验证，版本基线 1.99.1；最终用户不需要 Rust 或 Python：
-
-```sh
-python scripts/test-differential.py
-```
-
-该脚本锁定上游提交和 Cargo.lock，动态生成并删除白盒测试，比较数据码字、完整纠错码字及矩阵。`--quick` 运行较小的回归集。初次运行需下载 Rust 依赖。
-
-浏览器验证：
-
-```sh
-python scripts/build-web.py
-npm ci --prefix tests/browser --ignore-scripts
-node tests/browser/node_modules/playwright/cli.js install chromium
-node tests/browser/test.mjs
-python scripts/verify-browser-images.py
-```
-
-测试数据均为有来源的参考向量或原创合成数据。详细状态见 [VALIDATION.md](VALIDATION.md)。当前 `moon.mod` 中的版本号表示目标发布版本，不能据此认为 Mooncakes 已发布。
+这些结果说明已覆盖用例的兼容性，不保证所有扫描设备都支持 ECI 或大尺寸符号。完整范围、记录及已知限制见 [兼容性与可靠性](VALIDATION.md)。使用在线演示无需安装工具；本地运行网页需要 MoonBit 和 Python 3，使用库与 CLI 不需要 Rust 或独立解码器。
 
 ## 来源与许可证
 
-MIT。编码算法移植自 [datamatrix-rs](https://github.com/jannschu/datamatrix-rs)，固定提交 `af189538aee8f029dd58f317ebd4c006c9837ac2`，采用其 MIT 许可。上游作者版权声明保存在 [LICENSES/datamatrix-rs-MIT.txt](LICENSES/datamatrix-rs-MIT.txt)。
+本项目采用 [MIT 许可证](LICENSE)。编码算法移植自 [datamatrix-rs](https://github.com/jannschu/datamatrix-rs)，固定提交 `af189538aee8f029dd58f317ebd4c006c9837ac2`，采用其 MIT 许可。上游作者版权声明保存在 [LICENSES/datamatrix-rs-MIT.txt](LICENSES/datamatrix-rs-MIT.txt)。
 
 完整六模式优化器已移植；对同代价候选采用明确的排序平局规则。项目不承诺所有输入全局最优。逐文件映射、差异及工具链说明见 [MIGRATION.md](MIGRATION.md)，第三方与测试数据来源见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
