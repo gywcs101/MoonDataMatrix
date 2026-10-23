@@ -4,6 +4,8 @@
 
 MoonBit 实现的 **Data Matrix ECC 200 编码库**，附原生命令行工具和完全在本地运行的浏览器演示。
 
+**[在线演示](https://gywcs101.github.io/MoonDataMatrix/)** · [初审申报书](SUBMISSION.md) · [验证记录](VALIDATION.md)
+
 当前为 `0.1.0` 发布准备阶段，尚未发布到 Mooncakes。GitHub 主分支可直接构建。项目不宣称通过 ISO 全条款认证。
 
 ## 功能与边界

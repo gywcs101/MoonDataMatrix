@@ -31,6 +31,7 @@ MoonDataMatrix：MoonBit Data Matrix ECC 200 编码库。提供可复用库、�
 
 ## 仓库与工程证据
 
+- 在线演示：https://gywcs101.github.io/MoonDataMatrix/
 - 公开仓库：https://github.com/gywcs101/MoonDataMatrix
 - 提交历史：https://github.com/gywcs101/MoonDataMatrix/commits/main/
 - CI：https://github.com/gywcs101/MoonDataMatrix/actions/workflows/ci.yml
@@ -42,3 +43,7 @@ MoonDataMatrix：MoonBit Data Matrix ECC 200 编码库。提供可复用库、�
 ## 发布状态
 
 目标模块 `gywcs101/datamatrix`，目标正式版本 `0.1.0`，MIT。当前未发布 Mooncakes，正式发布安排在初审后工程验收完成时，届时核对远端版本、构建状态与实际安装结果。
+
+## 初审交付核对（2026-10-23）
+
+实现提交 `3f2ef302b3bc662cf042a930ef381db2d7c490cf` 的多平台 CI 与静态演示部署均成功。在线演示的中文预览、PNG 下载、许可链接已实际访问验证，下载 PNG 经独立解码器逐字节还原成功。仓库已有不少于 10 条真实提交。此次核对不代表主办方初审已通过，申报材料尚未代为提交。

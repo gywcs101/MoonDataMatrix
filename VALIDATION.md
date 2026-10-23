@@ -1,6 +1,6 @@
 # 验证记录
 
-日期：2026-10-22。以下区分本地结果、远端 CI 和未完成的发布事项。
+本地实现验证：2026-10-22；远端与在线交付复核：2026-10-23。以下区分本地结果、远端 CI 和未完成的发布事项。
 
 ## 本地已经验证
 
@@ -17,6 +17,17 @@
 GitHub Actions 的 `CI` 工作流覆盖 Windows/Linux/macOS native 与 CLI；Linux 额外覆盖四后端、生成接口一致性、固定上游差分、独立解码、消费者和浏览器测试。
 
 请以对应提交的实际运行记录为准：https://github.com/gywcs101/MoonDataMatrix/actions/workflows/ci.yml 。不把历史提交的绿色状态当作最新提交的证明，也不把排队当作失败。
+
+### 已核实的远端记录
+
+实现提交：`3f2ef302b3bc662cf042a930ef381db2d7c490cf`。
+
+- [CI 成功记录](https://github.com/gywcs101/MoonDataMatrix/actions/runs/39780885239)：Windows/Linux/macOS native、Linux 四后端、172 组上游差分、独立解码、消费者和浏览器验证均通过。
+- [演示部署成功记录](https://github.com/gywcs101/MoonDataMatrix/actions/runs/39780885230)。
+- [在线演示](https://gywcs101.github.io/MoonDataMatrix/)：2026-10-23 实际浏览器访问验证了预览、中文示例、PNG 下载及五个许可说明链接。下载 PNG 由 ZXing-C++ 成功还原 UTF-8 原始字节。
+- `scripts/test-interop.py` 当前包含 52 组独立解码用例，包括最大数字容量 3116 位的原始字节输入。
+
+上述记录明确对应实现提交；后续文档更新的 CI 应查看其自身运行状态。
 
 ## 已知边界
 
