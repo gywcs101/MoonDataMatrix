@@ -1,4 +1,4 @@
-name = "gywcs101/datamatrix"
+name = "gywcs101/MoonDataMatrix"
 
 version = "0.1.0"
 

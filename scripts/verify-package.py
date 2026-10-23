@@ -2,7 +2,7 @@ import subprocess,zipfile
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 subprocess.run(['moon','package'],cwd=root,check=True)
-archives=list((root/'_build/publish').glob('gywcs101-datamatrix-0.1.0.zip'))
+archives=list((root/'_build/publish').glob('gywcs101-MoonDataMatrix-0.1.0.zip'))
 assert len(archives)==1
 with zipfile.ZipFile(archives[0]) as archive:
  names=set(archive.namelist())
@@ -14,5 +14,5 @@ with zipfile.ZipFile(archives[0]) as archive:
   assert not forbidden.intersection(path.parts),name
   assert not any(s in name.lower() for s in ['credentials','rustup-init','.env']),name
  manifest=archive.read('moon.mod').decode()
- assert 'gywcs101/datamatrix' in manifest and '0.1.0' in manifest
+ assert 'gywcs101/MoonDataMatrix' in manifest and '0.1.0' in manifest
 print('Package contents, licenses, source mapping and artifact exclusions passed')

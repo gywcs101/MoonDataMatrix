@@ -1,5 +1,5 @@
 import {
-  "gywcs101/datamatrix" @lib,
+  "gywcs101/MoonDataMatrix" @lib,
   "moonbitlang/core/env",
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/debug",

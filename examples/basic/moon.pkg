@@ -1,5 +1,5 @@
 import {
-  "gywcs101/datamatrix",
+  "gywcs101/MoonDataMatrix" @datamatrix,
 }
 
 pkgtype(kind: "executable")

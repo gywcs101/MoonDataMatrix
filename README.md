@@ -40,14 +40,14 @@ moon work init
 moon work use MoonDataMatrix myapp
 ```
 
-在应用的 `moon.mod` 中将 `"gywcs101/datamatrix@0.1.0"` 加入 `import` 块，再在使用该库的包中添加下面的导入。工作区会使用本地源码模块。
+在应用的 `moon.mod` 中将 `"gywcs101/MoonDataMatrix@0.1.0"` 加入 `import` 块，再在使用该库的包中添加下面的导入。工作区会使用本地源码模块。
 
 ## 库接口
 
 在应用包的 `moon.pkg` 中添加导入（已有 `import` 块时合并条目）：
 
 ```text
-import { "gywcs101/datamatrix" @datamatrix }
+import { "gywcs101/MoonDataMatrix" @datamatrix }
 ```
 
 使用示例：

@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "gywcs101/datamatrix"
+package "gywcs101/MoonDataMatrix"
 
 import {
   "moonbitlang/core/debug",
