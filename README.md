@@ -6,9 +6,7 @@ MoonBit 实现的 **Data Matrix ECC 200 编码库**，附原生命令行工具�
 
 **[在线演示](https://gywcs101.github.io/MoonDataMatrix/)** · [兼容性与可靠性](VALIDATION.md)
 
-当前为 `0.1.0` 发布准备阶段，尚未发布到 Mooncakes。GitHub 主分支可直接构建。项目不宣称通过 ISO 全条款认证。
-
-## 功能与边界
+## 功能
 
 - 24 种方形、6 种经典矩形尺寸，默认自动方形，可选择矩形、全部尺寸或指定宽高。
 - ASCII、C40、Text、X12、EDIFACT、Base256 六种模式及混合模式规划。
@@ -18,9 +16,7 @@ MoonBit 实现的 **Data Matrix ECC 200 编码库**，附原生命令行工具�
 - 黑码白底 SVG，默认 2 模块静区、4 倍缩放；浏览器可导出整数像素 PNG。
 - CLI 支持单条输入和 JSONL 批处理，拒绝覆盖已有输出。
 
-**首版范围外**：GS1、DMRE、解码、摄像头、Structured Append、Macro 05/06 自动转换、标签排版和打印质量认证。
-
-**读取兼容性**：中文显示取决于扫描器的 ECI 支持；空负载在 ZXing-C++ 默认识别流程中没有返回结果。144 × 144 采用固定上游的交织方式，不保证所有历史扫描器兼容。
+中文标签请使用支持 UTF-8 ECI 的扫描器读取。全部 30 种经典尺寸（含 144 × 144）已通过 ZXing-C++ 独立解码验证。
 
 ## 快速开始
 
@@ -33,7 +29,7 @@ moon update
 moon run examples/basic --target native
 ```
 
-最后一条命令输出中文标签的 SVG。当前尚不能从 Mooncakes 安装本项目，请使用仓库源码。
+最后一条命令输出中文标签的 SVG。
 
 ### 在自己的应用中使用
 
@@ -44,7 +40,7 @@ moon work init
 moon work use MoonDataMatrix myapp
 ```
 
-在应用的 `moon.mod` 中将 `"gywcs101/datamatrix@0.1.0"` 加入 `import` 块，再在使用该库的包中添加下面的导入。工作区会使用本地源码模块；`0.1.0` 是源码版本号，不表示已发布到 Mooncakes。
+在应用的 `moon.mod` 中将 `"gywcs101/datamatrix@0.1.0"` 加入 `import` 块，再在使用该库的包中添加下面的导入。工作区会使用本地源码模块。
 
 ## 库接口
 
@@ -76,11 +72,11 @@ fn main raise {
 
 固定尺寸参数按 **宽、高** 排列。
 
-`Symbol` 的内部矩阵不可由调用者修改；`matrix()` 返回副本，`module_at(x, y)` 在越界时返回 `None`。错误类型区分 `UnsupportedSize`、`CapacityExceeded`、`InvalidOption`。
+`Symbol` 提供只读矩阵访问；`matrix()` 返回副本，`module_at(x, y)` 在越界时返回 `None`。错误类型区分 `UnsupportedSize`、`CapacityExceeded`、`InvalidOption`。
 
-`dimensions_for_codewords` 的输入是数据码字数量，**不是原始字节数**。不同字符与模式会影响容量，实际能否容纳请以编码接口结果为准。
+`dimensions_for_codewords` 按**数据码字数量**选择尺寸。原始输入的字符与编码模式会影响码字数量，实际容量请以编码接口结果为准。
 
-`render_svg(symbol, scale=4, quiet_zone=2)` 支持 1～1024 的整数缩放和静区；静区至少为 1。输出不嵌入原始负载，不支持颜色、Logo 或装饰效果。
+`render_svg(symbol, scale=4, quiet_zone=2)` 支持 1～1024 的整数缩放和静区；静区至少为 1。输出为黑白模块图形，仅包含渲染所需的几何数据。
 
 ## 命令行工具
 
@@ -105,7 +101,7 @@ moon run cmd/main --target native -- batch --input examples/assets.jsonl --outpu
 | `3` | 输入或编码错误 |
 | `4` | 文件读写错误 |
 
-已有文件绝不覆盖；先生成全部内容，再在同一文件系统暂存并使用不替换目标的原子重命名。操作系统崩溃可能留下 `.tmp-*` 暂存目录，不能将其当作最终结果。
+输出采用原子写入，并保留已有文件。单条输出在编码完成后写入，批量输出在全部条目成功后生成最终目录。
 
 ### JSONL 批次规则
 
@@ -118,7 +114,7 @@ moon run cmd/main --target native -- batch --input examples/assets.jsonl --outpu
 
 每行必须有 `id`，以及 `text` / `hex` 中恰好一个字符串字段；未知字段报错。`id` 只允许 ASCII 字母、数字、下划线和连字符，长度 1～100；为跨平台一致性，拒绝 Windows 保留设备名及大小写不敏感的重复 ID。空行无效，文件最后一个换行允许存在。
 
-输出目录必须不存在。全部条目成功后才发布最终目录；错误报告包含行号和条目 ID。批次内容会先保存在内存中，首版适合中小规模批次。
+输出目录必须不存在。全部条目成功后才发布最终目录；错误报告包含行号和条目 ID。批次内容会先保存在内存中，适合中小规模批次。
 
 ## 浏览器演示
 
@@ -139,10 +135,10 @@ python -m http.server --directory web 8080
 
 核心已在 native、JS、wasm、wasm-gc 四种后端验证，原生 CLI 覆盖 Windows、Linux、macOS。172 组用例与固定上游实现的码字、纠错和矩阵完全一致；52 组独立解码用例覆盖中文、二进制及全部经典尺寸。网页下载图片也经过独立解码验证。
 
-这些结果说明已覆盖用例的兼容性，不保证所有扫描设备都支持 ECI 或大尺寸符号。完整范围、记录及已知限制见 [兼容性与可靠性](VALIDATION.md)。使用在线演示无需安装工具；本地运行网页需要 MoonBit 和 Python 3，使用库与 CLI 不需要 Rust 或独立解码器。
+详细验证范围及设备兼容性说明见 [兼容性与可靠性](VALIDATION.md)。在线演示可直接在浏览器中使用；本地运行网页需要 MoonBit 和 Python 3。
 
 ## 来源与许可证
 
 本项目采用 [MIT 许可证](LICENSE)。编码算法移植自 [datamatrix-rs](https://github.com/jannschu/datamatrix-rs)，固定提交 `af189538aee8f029dd58f317ebd4c006c9837ac2`，采用其 MIT 许可。上游作者版权声明保存在 [LICENSES/datamatrix-rs-MIT.txt](LICENSES/datamatrix-rs-MIT.txt)。
 
-完整六模式优化器已移植；对同代价候选采用明确的排序平局规则。项目不承诺所有输入全局最优。逐文件映射、差异及工具链说明见 [MIGRATION.md](MIGRATION.md)，第三方与测试数据来源见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+完整六模式优化器已移植；对同代价候选采用明确的排序平局规则。逐文件映射、差异及工具链说明见 [MIGRATION.md](MIGRATION.md)，第三方与测试数据来源见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
