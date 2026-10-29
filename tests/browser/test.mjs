@@ -28,6 +28,21 @@ try{
  await page.screenshot({path:resolve(output,'demo.png'),fullPage:true});
  await page.locator('#kind').selectOption('hex');await page.locator('#input').fill('XX');await page.locator('#generate').click();
  assert.ok(await page.locator('#error').textContent());assert.ok(await page.locator('#png').isDisabled());assert.equal(await page.locator('#preview svg').count(),0);
+ await page.locator('[data-example="2"]').click();
+ const binaryDisplay='十六进制（8 字节）：\n00 01 02 03 FF FE 80 7F';
+ assert.equal(await page.locator('#decoded-text').textContent(),binaryDisplay);
+ assert.equal(JSON.parse(await page.locator('#decoded').textContent()).hex,'00010203fffe807f');
+ const binaryDownload=page.waitForEvent('download');await page.locator('#json').click();
+ await (await binaryDownload).saveAs(resolve(output,'binary-symbols.json'));
+ const binarySet=JSON.parse(await readFile(resolve(output,'binary-symbols.json'),'utf8'));
+ for(const kind of ['matrix','assemble']) {
+  await page.locator('#kind').selectOption(kind);
+  await page.locator('#input').fill(JSON.stringify(kind==='matrix'?binarySet.symbols[0]:binarySet));
+  await page.locator('#generate').click();
+  assert.equal(await page.locator('#decoded-text').textContent(),binaryDisplay);
+ }
+ await page.locator('[data-example="1"]').click();
+ assert.equal(await page.locator('#decoded-text').textContent(),'样本编号：LAB-2026-001 🧪');
  await page.locator('[data-example="2"]').click();await page.locator('#shape').selectOption('fixed');await page.locator('#size').selectOption('10x10');await page.locator('#generate').click();
  assert.ok((await page.locator('#error').textContent()).includes('CapacityExceeded'));
  for(const example of ['3','4','5','6']) {

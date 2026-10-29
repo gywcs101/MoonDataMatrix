@@ -7,7 +7,15 @@ const charsets=[[26,'UTF-8'],[2,'CP437'],[3,'ISO-8859-1'],...Array.from({length:
 for(const [value,label] of charsets){const o=document.createElement('option');o.value=value;o.textContent=label;$('eci').append(o);}
 let current=null,collection=null;
 function invalidate(){current=null;collection=null;$('preview').replaceChildren();$('symbol').replaceChildren();$('symbol').disabled=true;$('decoded').textContent='';$('decoded-text').textContent='';$('preview').style.display='grid';$('json').textContent='下载矩阵 JSON';$('meta').textContent='';$('svg').disabled=$('png').disabled=$('json').disabled=true;}
-function showSymbol(index){current=collection.symbols[index];$('preview').innerHTML=current.svg;$('meta').textContent=`${current.width} × ${current.height} 模块 · 第 ${index+1} / ${collection.symbols.length} 个符号`;$('decoded').textContent=JSON.stringify(current.decoded,null,2);$('decoded-text').textContent=current.decoded.text??current.decoded.hex;$('svg').disabled=$('png').disabled=false;}
+function showDecoded(decoded){
+ $('decoded').textContent=JSON.stringify(decoded,null,2);
+ const binary=$('kind').value==='hex'||(!decoded.gs1&&!decoded.macro&&(!decoded.eci?.length||/[\x00-\x08\x0b-\x1f\x7f-\x9f]/.test(decoded.text??'')));
+ const hex=decoded.hex.match(/.{1,2}/g)?.join(' ').toUpperCase()||'（空）';
+ $('decoded-text').textContent=binary||decoded.text==null
+  ? `十六进制（${decoded.hex.length/2} 字节）：\n${hex}`
+  : decoded.text.replace(/[\x00-\x08\x0b-\x1f\x7f-\x9f]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));
+}
+function showSymbol(index){current=collection.symbols[index];$('preview').innerHTML=current.svg;$('meta').textContent=`${current.width} × ${current.height} 模块 · 第 ${index+1} / ${collection.symbols.length} 个符号`;showDecoded(current.decoded);$('svg').disabled=$('png').disabled=false;}
 function render(){
  invalidate();$('error').textContent='';
  try{
@@ -25,7 +33,7 @@ function render(){
   if(result.error)throw new Error(result.error);
   collection=result;$('json').disabled=false;
   if(result.symbols){result.symbols.forEach((_,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`符号 ${i+1}`;$('symbol').append(o);});$('symbol').disabled=result.symbols.length<2;showSymbol(0);}
-  else {$('preview').style.display='none';$('decoded').textContent=JSON.stringify(result,null,2);$('decoded-text').textContent=result.text??result.hex;$('meta').textContent='解码完成';$('json').textContent='下载解码结果';}
+  else {$('preview').style.display='none';showDecoded(result);$('meta').textContent='解码完成';$('json').textContent='下载解码结果';}
  }catch(e){$('error').textContent=e.message;}
 }
 $('symbol').onchange=()=>showSymbol(Number($('symbol').value));
