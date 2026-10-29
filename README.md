@@ -179,7 +179,7 @@ moon run cmd/main --target native -- assemble --input parts.json
 
 ```sh
 python scripts/build-web.py
-python -m http.server --directory web 8080
+python -m http.server --directory _build/site 8080
 ```
 
 打开 [本地演示](http://localhost:8080)。页面支持文本、十六进制、GS1、指定字符集、自动分片、消息 JSON 和矩阵解码。提供 SVG/PNG 与矩阵 JSON 下载，可将符号集合 JSON 再导入并重组。输入变化会清除旧结果，避免下载错误对应的图片。所有编码和 SVG 生成调用编译出的 MoonBit JS；页面仅处理交互与 Canvas PNG 绘制，无上传、登录或历史记录。

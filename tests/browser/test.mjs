@@ -6,7 +6,10 @@ import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
-const server=createServer(async(req,res)=>{try{const path=req.url==='/'?'index.html':req.url.slice(1);if(!['index.html','app.js','core.js'].includes(path)){res.writeHead(404);return res.end();}res.setHeader('Content-Type',path.endsWith('.js')?'application/javascript':'text/html; charset=utf-8');res.end(await readFile(resolve(root,'web',path)));}catch{res.writeHead(404);res.end();}});
+const site=resolve(root,'_build/site');
+const html=await readFile(resolve(site,'index.html'),'utf8');
+assert.match(html,/src="app\.[0-9a-f]{16}\.js"/);
+const server=createServer(async(req,res)=>{try{const path=req.url==='/'?'index.html':req.url.slice(1);if(!/^(index\.html|(?:app|core)\.[0-9a-f]{16}\.js)$/.test(path)){res.writeHead(404);return res.end();}res.setHeader('Content-Type',path.endsWith('.js')?'application/javascript':'text/html; charset=utf-8');res.end(await readFile(resolve(site,path)));}catch{res.writeHead(404);res.end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const browser=await chromium.launch();
 try{
