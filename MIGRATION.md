@@ -2,10 +2,12 @@
 
 ## Source
 
-`jannschu/datamatrix-rs` at `af189538aee8f029dd58f317ebd4c006c9837ac2`, MIT option. Only encoding-related algorithms are ported. No decoder, DMRE or GS1 support is exposed.
+`jannschu/datamatrix-rs` at `af189538aee8f029dd58f317ebd4c006c9837ac2`, MIT option. Only encoding-related algorithms are ported. Matrix decoding includes six-mode payload recovery and Reed–Solomon error correction.
 
 | MoonBit file | Upstream source | Adaptation |
 |---|---|---|
+| decode.mbt | src/decodation/mod.rs, placement.rs | Six-mode decoding, ECI offsets and validated module input |
+| decode_ecc.mbt | Data Matrix GF(256) polynomial | Original Berlekamp–Massey locator and syndrome linear solve |
 | sizes.mbt | src/symbol_size.rs | 30 classic sizes, option-based selection |
 | ecc.mbt | src/errorcode/mod.rs, galois.rs | Same polynomial 0x12D and block interleaving; generator coefficients calculated rather than copied |
 | placement.mbt | src/placement.rs IndexTraversal / MatrixMap | Utah/corner traversal and region borders; private Symbol storage |

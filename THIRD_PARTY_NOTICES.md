@@ -2,7 +2,7 @@
 
 Reference and port source: [datamatrix-rs](https://github.com/jannschu/datamatrix-rs), commit `af189538aee8f029dd58f317ebd4c006c9837ac2`, copyright 2021 Jannik Schürg. We select its MIT option; the complete license is in LICENSES/datamatrix-rs-MIT.txt.
 
-Port scope: symbol tables, ECC encoding, placement, data encodation and the complete six-mode planner. No decoder is ported. See MIGRATION.md for the per-file mapping and deterministic tie-order adjustment. Root LICENSE applies to original contributions and does not replace upstream notices.
+Port scope: symbol tables, ECC encoding, placement, data encodation and the complete six-mode planner. Six-mode data decoding is adapted from src/decodation/mod.rs; matrix extraction shares the ported placement traversal. The Reed–Solomon decoder is an original implementation of Berlekamp–Massey and a syndrome linear solve. See MIGRATION.md for the per-file mapping and deterministic tie-order adjustment. Root LICENSE applies to original contributions and does not replace upstream notices.
 
 ZXing-C++ 2.3.0 Python binding is a independent validation decoder, not shipped in the library. Its license remains applicable to its own distribution.
 

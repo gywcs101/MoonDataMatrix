@@ -6,6 +6,8 @@ import {
 }
 
 // Values
+pub fn decode_matrix(Array[Array[Bool]]) -> DecodedMessage raise DecodeError
+
 pub fn dimensions_for_codewords(Int, options? : EncodeOptions) -> (Int, Int) raise EncodeError
 
 pub fn encode_bytes(Bytes, options? : EncodeOptions) -> Symbol raise EncodeError
@@ -17,6 +19,15 @@ pub fn parse_hex(String) -> Bytes raise EncodeError
 pub fn render_svg(Symbol, scale? : Int, quiet_zone? : Int) -> String raise EncodeError
 
 // Errors
+pub suberror DecodeError {
+  InvalidMatrix(String)
+  UnsupportedMatrixSize
+  CorrectionFailed
+  InvalidCodeword(String)
+  InvalidText
+} derive(@debug.Debug)
+pub fn DecodeError::to_repr(Self) -> @debug.Repr
+
 pub suberror EncodeError {
   UnsupportedSize
   CapacityExceeded
@@ -25,6 +36,14 @@ pub suberror EncodeError {
 pub fn EncodeError::to_repr(Self) -> @debug.Repr
 
 // Types and methods
+pub struct DecodedMessage {
+  corrected_codewords : Int
+  // private fields
+}
+pub fn DecodedMessage::bytes(Self) -> Bytes
+pub fn DecodedMessage::eci_changes(Self) -> Array[(Int, Int)]
+pub fn DecodedMessage::text(Self) -> String raise DecodeError
+
 pub(all) struct EncodeOptions {
   shape : Shape
 } derive(Eq)

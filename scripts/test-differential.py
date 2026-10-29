@@ -26,7 +26,7 @@ for i,((w,h,eci,data),r) in enumerate(zip(cases,results)):
  source += ['///|',f'test "upstream differential {i}" {{',f'let options : EncodeOptions = {options}', f'let data = {literal}']
  if 'error' in r:
   source += [f'let failed = try {{ let out=planned_codewords(data,{str(bool(eci)).lower()},options);ignore(pad_data(out,options));false }} catch {{_=>true}}','assert_true(failed)','}'];continue
- source += [f'let out = planned_codewords(data,{str(bool(eci)).lower()},options)','let size = pad_data(out,options)',f'assert_eq(out,{r["data"]})',f'assert_eq((size.width,size.height),({r["width"]},{r["height"]}))','for b in error_code(out,size) {out.push(b)}',f'assert_eq(out,{r["codewords"]})','let symbol=place(out,size)','let bits=symbol.matrix().map(fn(row){row.map(fn(v){if v {"1"} else {"0"}}).join("")}).join("")',f'assert_eq(bits,"'+''.join('1' if b else '0' for b in r['bits'])+'")','}']
+ source += [f'let out = planned_codewords(data,{str(bool(eci)).lower()},options)','let size = pad_data(out,options)',f'assert_eq(out,{r["data"]})',f'assert_eq((size.width,size.height),({r["width"]},{r["height"]}))','for b in error_code(out,size) {out.push(b)}',f'assert_eq(out,{r["codewords"]})','let symbol=place(out,size)','let bits=symbol.matrix().map(fn(row){row.map(fn(v){if v {"1"} else {"0"}}).join("")}).join("")',f'assert_eq(bits,"'+''.join('1' if b else '0' for b in r['bits'])+'")','assert_eq(decode_matrix(symbol.matrix()).bytes(), data)','}']
 path=root/'differential_generated_wbtest.mbt'
 try:
  path.write_text('\n'.join(source),encoding='utf8')

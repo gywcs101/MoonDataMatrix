@@ -1,13 +1,13 @@
 // Adapted from datamatrix-rs placement.rs, IndexTraversal (MIT).
 
 ///|
-fn place(data : Array[Int], s : Size) -> Symbol {
+fn placement_indices(s : Size) -> Array[Int] {
   let w = s.width - 2 * s.regions_x
   let h = s.height - 2 * s.regions_y
   let cells = Array::make(w * h, -1)
   let mut pos = 0
   fn write(points : Array[(Int, Int)]) {
-    let value = data[pos]
+    let value = pos
     pos += 1
     for b in 0..<8 {
       let (r, c) = points[b]
@@ -24,7 +24,7 @@ fn place(data : Array[Int], s : Size) -> Symbol {
       if r >= h {
         r -= h
       }
-      cells[r * w + c] = (value >> (7 - b)) & 1
+      cells[r * w + c] = value * 8 + b
     }
   }
   fn utah(r : Int, c : Int) {
@@ -119,9 +119,25 @@ fn place(data : Array[Int], s : Size) -> Symbol {
     }
   }
   if cells[w * h - 1] < 0 {
-    cells[w * h - 1] = 1
-    cells[(h - 2) * w + w - 2] = 1
+    cells[w * h - 1] = -2
+    cells[(h - 2) * w + w - 2] = -2
   }
+  cells
+}
+
+///|
+fn place(data : Array[Int], s : Size) -> Symbol {
+  let w = s.width - 2 * s.regions_x
+  let h = s.height - 2 * s.regions_y
+  let cells = placement_indices(s).map(fn(i) {
+    if i == -2 {
+      1
+    } else if i < 0 {
+      0
+    } else {
+      (data[i / 8] >> (7 - i % 8)) & 1
+    }
+  })
   let matrix = Array::make(s.width * s.height, false)
   let rw = w / s.regions_x
   let rh = h / s.regions_y
