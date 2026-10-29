@@ -26,6 +26,7 @@ jobs:
       - run: moon build --target native --deny-warn
       - run: moon fmt --check
       - run: python scripts/test-cli.py
+      - run: python scripts/test-extended.py
   interoperability:
     runs-on: ubuntu-latest
     steps:

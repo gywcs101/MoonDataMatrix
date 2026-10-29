@@ -1,40 +1,36 @@
 # 兼容性与可靠性
 
-本地实现验证：2026-10-22；远端与在线交付复核：2026-10-23。以下记录对应已验证版本的支持范围与使用限制。
+## 验证范围
 
-## 本地已经验证
+核心测试覆盖 native、JS、wasm、wasm-gc；GitHub Actions 同时检查 Windows、Linux、macOS 的原生 CLI。各提交的结果可在 [CI 记录](https://github.com/gywcs101/MoonDataMatrix/actions/workflows/ci.yml) 查看。
 
-- MoonBit 12 个测试块在 native、JS、wasm、wasm-gc 上通过；其中包含多组循环用例。覆盖尺寸关系、纠错参考向量、30 种布置、ASCII、C40/Text、X12/EDIFACT、Base256 边界、UTF-8、接口保护及优化器结束规则。
-- 固定 datamatrix-rs 提交的 172 组差分用例：数据码字、完整纠错码字、尺寸及每一个矩阵模块完全一致。`scripts/test-differential.py` 可重现。
-- ZXing-C++ 对中文、emoji、空白/BOM、全部字节值、随机二进制、1555 字节大尺寸、30 种经典尺寸逐字节还原；`scripts/test-interop.py` 的固定语料持续纳入 CI。
-- CLI：中文命令行参数、文本/字节文件、十六进制、退出码、无效输入、不覆盖文件、JSONL 校验、批次失败无最终目录与 SVG 解码通过。
-- 浏览器：预览、错误提示、输入变化清除旧结果、SVG/PNG 下载通过。下载 PNG 与浏览器实际渲染 SVG 后生成的图片均由 ZXing-C++ 成功还原中文样例。
-- 实际压缩包检查：源码、README、许可证、来源说明和实例齐全；没有 node_modules、Rust 构建目录、测试产物、调研缓存或凭据。
-- 独立消费者：从实际压缩包解出的库导入新的 MoonBit 模块，四种后端测试通过。此项验证本地包，不能替代发布后从 Mooncakes 实际安装验证。
+| 能力 | 验证内容 |
+| --- | --- |
+| 编码与尺寸 | 190 组固定 datamatrix-rs 差分用例逐项比较数据码字、纠错码字与矩阵，覆盖 30 种经典尺寸和 18 种 DMRE 尺寸 |
+| 外部读取 | 70 组 ZXing-C++ 用例逐字节还原中文、emoji、BOM、全部字节值、随机二进制、144×144 和全部 48 种尺寸 |
+| 矩阵解码 | 六种模式、594 组确定性输入、全部尺寸；外部 ZXing-C++ 编码的英文、中文及二进制矩阵由 MoonBit 还原 |
+| 纠错 | 按纠错块注入错误，覆盖块纠错容量、144×144 不等长数据块与已知不可纠正样例 |
+| 控制协议 | ECI 编号长度边界及切换、GS1/FNC1、Macro 05/06、Reader Programming、非法组合与控制位置 |
+| 字符集 | 生成映射表逐条往返检查；Unicode 边界、BOM、非法序列与不可表示字符；多字符集消息独立字节对照 |
+| 结构化追加 | 自动文本和字节分片、最多 16 片、乱序重组、重复片与不一致元数据 |
+| CLI | 原有输入与 JSONL 批次、高级消息、矩阵 JSON、解码与重组、退出码和防覆盖行为 |
+| 浏览器 | GS1、DMRE、多字符集、多符号示例；SVG/PNG/JSON 下载、矩阵导入与重组、旧结果清除 |
+| 包与消费者 | 实际压缩包文件及许可证检查；独立 MoonBit 项目导入并在四后端使用编码、解码与字符集接口 |
 
-## 远端 CI
+上述检查分别由 scripts/test-differential.py、scripts/test-interop.py、scripts/test-extended.py、scripts/test-cli.py、scripts/test-consumer.py、scripts/verify-package.py 和 tests/browser/test.mjs 重现。浏览器下载的 PNG 与 SVG 栅格化图像另由 scripts/verify-browser-images.py 独立解码。
 
-GitHub Actions 的 `CI` 工作流覆盖 Windows/Linux/macOS native 与 CLI；Linux 额外覆盖四后端、生成接口一致性、固定上游差分、独立解码、消费者和浏览器测试。
+## 输入与设备兼容性
 
-[主分支 CI 记录](https://github.com/gywcs101/MoonDataMatrix/actions/workflows/ci.yml)提供各提交的检查结果。
+`decode_matrix` 接受按符号方向排列、包含完整定位边的规则布尔矩阵。图像采样系统可将模块读取结果传入该接口；纠错作用于数据和纠错码字。
 
-### 已核实的远端记录
+文本接口采用 UTF-8 ECI 26。指定字符集消息保留每次 ECI 切换，解码后的原始字节始终可读取；文本转换严格检查序列和字符集编号。外部读取设备需要支持对应的 ECI 才能直接显示文本。ZXing-C++ 2.3.0 对 ECI 31～35 的文本显示存在差异，这些用例通过原始字节与 Python 对应字符集转换进行独立核对。
 
-实现提交：`3f2ef302b3bc662cf042a930ef381db2d7c490cf`。
+GS1 接口负责首位 FNC1、字段分隔及 GS1 标识恢复；商品应用负责提供符合业务要求的应用标识符和字段值。普通字节 `0x1D` 与 FNC1 的控制元数据分别保留。
 
-- [CI 成功记录](https://github.com/gywcs101/MoonDataMatrix/actions/runs/39780885239)：Windows/Linux/macOS native、Linux 四后端、172 组上游差分、独立解码、消费者和浏览器验证均通过。
-- [演示部署成功记录](https://github.com/gywcs101/MoonDataMatrix/actions/runs/39780885230)。
-- [在线演示](https://gywcs101.github.io/MoonDataMatrix/)：2026-10-23 实际浏览器访问验证了预览、中文示例、PNG 下载及五个许可说明链接。下载 PNG 由 ZXing-C++ 成功还原 UTF-8 原始字节。
-- `scripts/test-interop.py` 当前包含 52 组独立解码用例，包括最大数字容量 3116 位的原始字节输入。
+144×144 使用固定上游的交织顺序，并通过 ZXing-C++ 验证。空负载可编码并由本库还原；ZXing-C++ 2.3.0 默认不返回空负载识别结果。
 
-上述验证结果对应所列实现提交。
+输出文件通过暂存文件提交，批量输出在所有条目成功后生成最终目录。已有文件受到保护；进程异常终止留下的暂存目录带有独立名称，可与最终结果区分。
 
-## 已知边界
+## 来源与复现
 
-- 未取得完整 ISO/IEC 16022:2024 付费正文，不宣称标准认证。
-- 本项目不声明对所有输入的全局最优编码；排序平局处理的移植差异详见 MIGRATION.md。
-- 空负载库内编码测试通过，但 ZXing-C++ 2.3.0 默认不返回识别结果，未计入成功扫码用例。
-- 144×144 按固定上游交织，现有 ZXing-C++ 用例通过；未验证所有历史扫描器。
-- 中文设备显示依赖 ECI 支持。
-- 本地未模拟断电；崩溃可能留下命名明确的暂存目录。正常错误不会暴露半批最终目录。
-- 当前消费者验证使用本地发布包；尚未发布 Mooncakes `0.1.0`，尚无正式安装结果。
+上游版本、移植差异见 [MIGRATION.md](MIGRATION.md)；字符集映射、独立验证工具及样例的来源见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。[在线演示](https://gywcs101.github.io/MoonDataMatrix/) 使用与库相同的 MoonBit 核心。

@@ -205,11 +205,15 @@ fn batch(
 fn run(args : Array[String]) -> Unit raise CliError {
   if args.length() < 2 || args[1] == "--help" {
     println(
-      "MoonDataMatrix\nencode (--text TEXT | --text-file PATH | --binary-file PATH | --hex HEX) [--output FILE]\nbatch --input JSONL --output NEW_DIRECTORY\nOptions: --shape square|rectangle|any | --size WIDTHxHEIGHT",
+      "MoonDataMatrix\nencode (--text TEXT | --text-file PATH | --binary-file PATH | --hex HEX) [--output FILE]\nbatch --input JSONL --output NEW_DIRECTORY\ndecode|assemble|message --input JSON [--output JSON]\nOptions: --shape square|rectangle|any|dmre|all | --size WIDTHxHEIGHT; encode --format svg|json; --message-file JSON",
     )
     return
   }
   let command = args[1]
+  if command == "decode" || command == "assemble" || command == "message" {
+    run_protocol(command, args)
+    return
+  }
   if command != "encode" && command != "batch" {
     fail(2, "unknown command")
   }
@@ -217,6 +221,7 @@ fn run(args : Array[String]) -> Unit raise CliError {
   let allowed = if command == "encode" {
     [
       "--text", "--text-file", "--binary-file", "--hex", "--output", "--shape", "--size",
+      "--format", "--message-file",
     ]
   } else {
     ["--input", "--output", "--shape", "--size"]
@@ -252,6 +257,8 @@ fn run(args : Array[String]) -> Unit raise CliError {
         None | Some("square") => @lib.Square
         Some("rectangle") => @lib.Rectangle
         Some("any") => @lib.Any
+        Some("dmre") => @lib.Dmre
+        Some("all") => @lib.WithDmre
         _ => raise CliError(2, "invalid shape")
       }
   }
@@ -270,26 +277,50 @@ fn run(args : Array[String]) -> Unit raise CliError {
     }
     batch(input, output, options)
   } else {
-    let inputs = ["--text", "--text-file", "--binary-file", "--hex"].filter(fn(
-      k,
-    ) {
-      values.contains(k)
-    })
+    let inputs = [
+      "--text", "--text-file", "--binary-file", "--hex", "--message-file",
+    ].filter(fn(k) { values.contains(k) })
     if inputs.length() != 1 {
       fail(2, "select exactly one input")
     }
     let key = inputs[0]
     let input = values[key]
-    let content = match key {
-      "--text" => svg(input, false, options)
-      "--hex" => svg(input, true, options)
-      "--text-file" => svg(text_decode(read_bytes(input)), false, options)
-      _ => {
-        let bytes = read_bytes(input)
-        @lib.render_svg(@lib.encode_bytes(bytes, options~)) catch {
-          e => raise CliError(3, @debug.to_string(e))
+    let format = values.get("--format").unwrap_or("svg")
+    if format != "svg" && format != "json" {
+      fail(2, "format must be svg or json")
+    }
+    let content = try {
+      if key == "--message-file" {
+        if values.contains("--shape") || values.contains("--size") {
+          fail(2, "message file contains its own size options")
+        }
+        let source = text_decode(read_bytes(input))
+        if format == "json" {
+          @protocol.process("encode", source)
+        } else {
+          let symbols = @protocol.encode_request(@json.parse(source))
+          if symbols.length() != 1 {
+            fail(2, "multiple symbols require --format json")
+          }
+          @lib.render_svg(symbols[0])
+        }
+      } else {
+        let symbol = match key {
+          "--text" => @lib.encode_text(input, options~)
+          "--hex" => @lib.encode_bytes(@lib.parse_hex(input), options~)
+          "--text-file" =>
+            @lib.encode_text(text_decode(read_bytes(input)), options~)
+          _ => @lib.encode_bytes(read_bytes(input), options~)
+        }
+        if format == "json" {
+          @protocol.symbol_json(symbol).stringify()
+        } else {
+          @lib.render_svg(symbol)
         }
       }
+    } catch {
+      CliError(code, message) => raise CliError(code, message)
+      e => raise CliError(3, @debug.to_string(e))
     }
     match values.get("--output") {
       Some(path) => write_single(path, content)
@@ -324,4 +355,39 @@ fn cli_args() -> Array[String] {
 #cfg(not(platform="windows"))
 fn cli_args() -> Array[String] {
   @env.args()
+}
+
+///|
+fn run_protocol(command : String, args : Array[String]) -> Unit raise CliError {
+  let values : Map[String, String] = Map([])
+  let mut i = 2
+  while i < args.length() {
+    let key = args[i]
+    if (key != "--input" && key != "--output") ||
+      values.contains(key) ||
+      i + 1 >= args.length() {
+      fail(2, "expected --input and optional --output")
+    }
+    values[key] = args[i + 1]
+    i += 2
+  }
+  let path = match values.get("--input") {
+    Some(p) => p
+    None => raise CliError(2, "missing input")
+  }
+  let input = text_decode(read_bytes(path))
+  let result = @protocol.process(
+    if command == "message" {
+      "encode"
+    } else {
+      command
+    },
+    input,
+  ) catch {
+    e => raise CliError(3, @debug.to_string(e))
+  }
+  match values.get("--output") {
+    Some(p) => write_single(p, result)
+    None => println(result)
+  }
 }

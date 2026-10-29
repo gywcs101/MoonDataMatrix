@@ -11,6 +11,8 @@ pub fn generate(
       "square" => @lib.Square
       "rectangle" => @lib.Rectangle
       "any" => @lib.Any
+      "dmre" => @lib.Dmre
+      "all" => @lib.WithDmre
       "fixed" => @lib.Fixed(width, height)
       _ => @lib.Fixed(-1, -1)
     }
@@ -24,9 +26,20 @@ pub fn generate(
       "height": symbol.height(),
       "matrix": symbol.matrix(),
       "svg": @lib.render_svg(symbol),
+      "decoded": @protocol.decoded_json(@lib.decode_matrix(symbol.matrix())),
     }
     result.stringify()
   } catch {
+    e => {
+      let result : Json = { "error": @debug.to_string(e) }
+      result.stringify()
+    }
+  }
+}
+
+///|
+pub fn process(operation : String, input : String) -> String {
+  @protocol.process(operation, input) catch {
     e => {
       let result : Json = { "error": @debug.to_string(e) }
       result.stringify()

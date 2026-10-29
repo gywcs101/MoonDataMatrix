@@ -1,4 +1,5 @@
 import {
+  "gywcs101/MoonDataMatrix/protocol",
   "gywcs101/MoonDataMatrix" @lib,
   "moonbitlang/core/debug",
 }
@@ -6,5 +7,5 @@ import {
 supported_targets = "js"
 
 options(
-  link: { "js": { "exports": [ "generate" ], "format": "esm" } },
+  link: { "js": { "exports": [ "generate", "process" ], "format": "esm" } },
 )
