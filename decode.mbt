@@ -267,7 +267,9 @@ pub fn decode_matrix(
   if matrix.iter().any(fn(row) { row.length() != w }) {
     raise InvalidMatrix("ragged matrix")
   }
-  let matches = sizes.filter(fn(s) { s.width == w && s.height == h })
+  let matches = (sizes + dmre_sizes).filter(fn(s) {
+    s.width == w && s.height == h
+  })
   if matches.is_empty() {
     raise UnsupportedMatrixSize
   }

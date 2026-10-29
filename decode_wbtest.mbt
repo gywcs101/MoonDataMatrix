@@ -15,7 +15,7 @@ test "decode all modes sizes and correction" {
   }
   let text = "中文🙂é\n"
   assert_eq(decode_matrix(encode_text(text).matrix()).text(), text)
-  for size in sizes {
+  for size in sizes + dmre_sizes {
     let data = b"12"
     let matrix = encode_bytes(data, options={
       shape: Fixed(size.width, size.height),
@@ -26,7 +26,7 @@ test "decode all modes sizes and correction" {
     assert_eq(decoded.bytes(), data)
     assert_eq(decoded.corrected_codewords, 1)
   }
-  for size in sizes {
+  for size in sizes + dmre_sizes {
     let data = Array::makei(size.capacity, fn(i) { i % 256 })
     let full = data.copy()
     for x in error_code(data, size) {

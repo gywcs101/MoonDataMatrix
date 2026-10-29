@@ -3,6 +3,8 @@ pub(all) enum Shape {
   Square
   Rectangle
   Any
+  WithDmre
+  Dmre
   Fixed(Int, Int)
 } derive(Eq)
 

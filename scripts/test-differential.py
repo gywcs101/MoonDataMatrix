@@ -11,6 +11,7 @@ for text in ['', 'A','ABC','abcdef','ABC>ABC123>ABCDE','AIMAIMAIMAIMAI','DEABCFG
  for eci in [0,1]:cases.append((0,0,eci,text.encode()))
 for size in [10,12,14,16,18,20,22,24,26,32,36,40,44,48,52,64,72,80,88,96,104,120,132,144]:cases.append((size,size,0,b'A'))
 for w,h in [(18,8),(32,8),(26,12),(36,12),(36,16),(48,16)]:cases.append((w,h,0,b'ABC'))
+for w,h in [(48,8),(64,8),(80,8),(96,8),(120,8),(144,8),(64,12),(88,12),(64,16),(36,20),(44,20),(64,20),(48,22),(48,24),(64,24),(40,26),(48,26),(64,26)]:cases.append((w,h,0,b'ABC'))
 for n in [1,2,3,4,5,6,7,8,9,10,11,12,14,16,20,31,40,62,100,249,250,251,512,1555]:
  for alphabet in [b'ABCDEFGHIJKLMNOPQRSTUVWXYZ', b'abcdefghijklmnopqrstuvwxyz',b'0123456789',b'@^?;><* ABC123',bytes(range(256))]:
   cases.append((0,0,n%2,bytes(rng.choice(alphabet) for _ in range(n))))

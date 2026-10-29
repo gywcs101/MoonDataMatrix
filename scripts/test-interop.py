@@ -10,6 +10,7 @@ rng=random.Random(20261022)
 cases=[dict(input=t,hex=False) for t in ['Hello, World!', '中文样本🙂', ' A\nB\r\n', '\ufeffABC','A'*200,'a'*200,'*>ABC123\r'*40,'@^?;:'+ '@^?;'*80]]
 cases += [dict(input=bytes(range(256)).hex(),hex=True),dict(input=bytes(rng.randrange(256) for _ in range(1555)).hex(),hex=True)]
 sizes=[(n,n) for n in [10,12,14,16,18,20,22,24,26,32,36,40,44,48,52,64,72,80,88,96,104,120,132,144]]+[(18,8),(32,8),(26,12),(36,12),(36,16),(48,16)]
+sizes += [(48,8),(64,8),(80,8),(96,8),(120,8),(144,8),(64,12),(88,12),(64,16),(36,20),(44,20),(64,20),(48,22),(48,24),(64,24),(40,26),(48,26),(64,26)]
 cases += [dict(input=(b'1'*3116).hex(),hex=True)]
 cases += [dict(input='41',hex=True,shape='fixed',width=w,height=h) for w,h in sizes]
 for n in [1,2,3,4,5,10,31,249,250,251,512]:
