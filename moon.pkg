@@ -1,4 +1,5 @@
 import {
+  "gywcs101/MoonDataMatrix/charset",
   "moonbitlang/core/debug",
   "moonbitlang/core/encoding/utf8",
 }

@@ -1,0 +1,33 @@
+///|
+fn tables(eci : Int) -> (Bytes, Bytes) raise CharsetError {
+  match eci {
+    2 => (decode_2, encode_2)
+    3 => (decode_3, encode_3)
+    4 => (decode_4, encode_4)
+    5 => (decode_5, encode_5)
+    6 => (decode_6, encode_6)
+    7 => (decode_7, encode_7)
+    8 => (decode_8, encode_8)
+    9 => (decode_9, encode_9)
+    10 => (decode_10, encode_10)
+    11 => (decode_11, encode_11)
+    12 => (decode_12, encode_12)
+    13 => (decode_13, encode_13)
+    15 => (decode_15, encode_15)
+    16 => (decode_16, encode_16)
+    17 => (decode_17, encode_17)
+    18 => (decode_18, encode_18)
+    20 => (decode_20, encode_20)
+    21 => (decode_21, encode_21)
+    22 => (decode_22, encode_22)
+    23 => (decode_23, encode_23)
+    24 => (decode_24, encode_24)
+    27 => (decode_27, encode_27)
+    28 => (decode_28, encode_28)
+    29 => (decode_29, encode_29)
+    30 => (decode_30, encode_30)
+    31 => (decode_31, encode_31)
+    32 => (decode_32, encode_32)
+    _ => raise UnsupportedEci(eci)
+  }
+}

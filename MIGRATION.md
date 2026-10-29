@@ -8,7 +8,7 @@
 |---|---|---|
 | decode.mbt | src/decodation/mod.rs, placement.rs | Six-mode decoding, ECI offsets and validated module input |
 | decode_ecc.mbt | Data Matrix GF(256) polynomial | Original Berlekamp–Massey locator and syndrome linear solve |
-| sizes.mbt | src/symbol_size.rs | 30 classic sizes, option-based selection |
+| sizes.mbt | src/symbol_size.rs | 30 classic sizes and all 18 DMRE sizes, opt-in extended selection |
 | ecc.mbt | src/errorcode/mod.rs, galois.rs | Same polynomial 0x12D and block interleaving; generator coefficients calculated rather than copied |
 | placement.mbt | src/placement.rs IndexTraversal / MatrixMap | Utah/corner traversal and region borders; private Symbol storage |
 | encode.mbt | src/encodation/ascii.rs, mod.rs | ASCII, padding, public UTF-8/byte APIs |
@@ -28,10 +28,10 @@ The pinned Rust reference runner compares padded data codewords, complete data/E
 
 ## Intentional API differences
 
-- Text always uses UTF-8 plus ECI 26, even for Latin-1 or ASCII. Rust comparison uses `encode_eci(..., Some(26))` explicitly.
+- The simple text API always uses UTF-8 plus ECI 26, even for Latin-1 or ASCII. Rust comparison uses `encode_eci(..., Some(26))` explicitly.
 - Bytes are untouched and receive no ECI.
 - Square symbols are the default. Rust comparison restricts its symbol list to squares too.
-- Automatic macros and FNC1 are disabled.
+- Simple text/byte entrypoints preserve their original semantics. Explicit message APIs expose FNC1, ECI, macros, reader programming and structured append.
 - SVG output and native CLI/browser adapters are original implementations.
 - The 144×144 block ordering follows the pinned upstream; interoperability is checked with ZXing-C++ 2.3.0. Historical scanner compatibility is not guaranteed.
 

@@ -310,8 +310,16 @@ fn planned_codewords(
   eci : Bool,
   options : EncodeOptions,
 ) -> Array[Int] raise EncodeError {
+  planned_with_prefix(data, if eci { [241, 27] } else { [] }, options)
+}
+
+///|
+fn planned_with_prefix(
+  data : Bytes,
+  out : Array[Int],
+  options : EncodeOptions,
+) -> Array[Int] raise EncodeError {
   ignore(select_size(0, options))
-  let out = if eci { [241, 27] } else { [] }
   let enc : Encoder = {
     data,
     options,

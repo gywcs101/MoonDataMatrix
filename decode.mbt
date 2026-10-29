@@ -16,6 +16,11 @@ pub extend DecodeError with @debug.Debug::{to_repr}
 pub struct DecodedMessage {
   priv payload : Bytes
   priv ecis : Array[(Int, Int)]
+  gs1 : Bool
+  macro_kind : Int
+  reader_programming : Bool
+  append : AppendHeader?
+  priv separators : Array[Int]
   corrected_codewords : Int
 }
 
@@ -31,12 +36,32 @@ pub fn DecodedMessage::eci_changes(self : DecodedMessage) -> Array[(Int, Int)] {
 
 ///|
 pub fn DecodedMessage::text(self : DecodedMessage) -> String raise DecodeError {
-  if self.ecis.iter().any(fn(e) { e.1 != 26 }) {
-    raise InvalidText
+  let out = StringBuilder()
+  let mut start = 0
+  let mut active = 3
+  for (offset, eci) in self.ecis {
+    let bytes = Bytes::makei(offset - start, fn(i) { self.payload[start + i] })
+    out.write_string(
+      @charset.decode(bytes, active) catch {
+        _ => raise InvalidText
+      },
+    )
+    start = offset
+    active = eci
   }
-  @utf8.decode(self.payload) catch {
-    _ => raise InvalidText
+  let bytes = Bytes::makei(
+    self.payload.length() - start - (if self.macro_kind != 0 { 2 } else { 0 }),
+    fn(i) { self.payload[start + i] },
+  )
+  out.write_string(
+    @charset.decode(bytes, active) catch {
+      _ => raise InvalidText
+    },
+  )
+  if self.macro_kind != 0 {
+    out.write_string("\u001e\u0004")
   }
+  out.to_string()
 }
 
 ///|
@@ -78,6 +103,11 @@ fn decode_data(
   let r = CodeReader::{ data, pos: 0, }
   let out : Array[Byte] = []
   let ecis = []
+  let separators = []
+  let mut gs1 = false
+  let mut macro_kind = 0
+  let mut reader_programming = false
+  let mut append : AppendHeader? = None
   while r.left() > 0 {
     let cw = r.take()
     if cw >= 1 && cw <= 128 {
@@ -90,6 +120,46 @@ fn decode_data(
       continue
     }
     match cw {
+      232 =>
+        if r.pos == 1 || (r.pos == 5 && append is Some(_)) {
+          gs1 = true
+        } else {
+          separators.push(out.length())
+          out.push(b'\x1d')
+        }
+      233 => {
+        if r.pos != 1 {
+          raise InvalidCodeword("structured append position")
+        }
+        let sequence = r.take()
+        let a : AppendHeader = {
+          index: (sequence >> 4) + 1,
+          count: 17 - (sequence & 15),
+          file_id1: r.take(),
+          file_id2: r.take(),
+        }
+        if !valid_append(a) {
+          raise InvalidCodeword("structured append header")
+        }
+        append = Some(a)
+      }
+      234 => {
+        if r.pos != 1 {
+          raise InvalidCodeword("reader programming position")
+        }
+        reader_programming = true
+      }
+      236 | 237 => {
+        if r.pos != 1 {
+          raise InvalidCodeword("macro position")
+        }
+        macro_kind = cw - 231
+        for b in b"[)>\x1e0" {
+          out.push(b)
+        }
+        out.push((48 + macro_kind).to_byte())
+        out.push(b'\x1d')
+      }
       129 =>
         while r.left() > 0 {
           let value = r.take()
@@ -193,6 +263,12 @@ fn decode_data(
                 shift = 0
                 continue
               }
+              if v == 27 {
+                separators.push(out.length())
+                out.push(b'\x1d')
+                shift = 0
+                continue
+              }
               if v > 26 {
                 raise InvalidCodeword("shift2")
               }
@@ -251,7 +327,20 @@ fn decode_data(
       _ => raise InvalidCodeword("unsupported control or invalid codeword")
     }
   }
-  { payload: Bytes::from_array(out), ecis, corrected_codewords: corrected, }
+  if macro_kind != 0 {
+    out.push(b'\x1e')
+    out.push(b'\x04')
+  }
+  {
+    payload: Bytes::from_array(out),
+    ecis,
+    separators,
+    gs1,
+    macro_kind,
+    reader_programming,
+    append,
+    corrected_codewords: corrected,
+  }
 }
 
 ///|
@@ -309,4 +398,9 @@ pub fn decode_matrix(
   }
   let corrected = correct_codewords(words, size)
   decode_data(Array::makei(size.capacity, fn(i) { words[i] }), corrected)
+}
+
+///|
+pub fn DecodedMessage::fnc1_positions(self : DecodedMessage) -> Array[Int] {
+  self.separators.copy()
 }

@@ -6,11 +6,23 @@ import {
 }
 
 // Values
+pub fn assemble(Array[DecodedMessage]) -> DecodedMessage raise DecodeError
+
 pub fn decode_matrix(Array[Array[Bool]]) -> DecodedMessage raise DecodeError
 
 pub fn dimensions_for_codewords(Int, options? : EncodeOptions) -> (Int, Int) raise EncodeError
 
+pub fn encode_append_bytes(Bytes, Int, Int, options? : EncodeOptions, eci? : Int?) -> Array[Symbol] raise EncodeError
+
+pub fn encode_append_text(String, Int, Int, options? : EncodeOptions) -> Array[Symbol] raise EncodeError
+
 pub fn encode_bytes(Bytes, options? : EncodeOptions) -> Symbol raise EncodeError
+
+pub fn encode_gs1(Bytes, options? : EncodeOptions) -> Symbol raise EncodeError
+
+pub fn encode_macro(Bytes, options? : EncodeOptions) -> Symbol raise EncodeError
+
+pub fn encode_message(Array[MessageSegment], options? : MessageOptions) -> Symbol raise EncodeError
 
 pub fn encode_text(String, options? : EncodeOptions) -> Symbol raise EncodeError
 
@@ -36,12 +48,26 @@ pub suberror EncodeError {
 pub fn EncodeError::to_repr(Self) -> @debug.Repr
 
 // Types and methods
+pub(all) struct AppendHeader {
+  index : Int
+  count : Int
+  file_id1 : Int
+  file_id2 : Int
+} derive(Eq)
+pub fn AppendHeader::equal(Self, Self) -> Bool
+pub fn AppendHeader::not_equal(Self, Self) -> Bool
+
 pub struct DecodedMessage {
+  gs1 : Bool
+  macro_kind : Int
+  reader_programming : Bool
+  append : AppendHeader?
   corrected_codewords : Int
   // private fields
 }
 pub fn DecodedMessage::bytes(Self) -> Bytes
 pub fn DecodedMessage::eci_changes(Self) -> Array[(Int, Int)]
+pub fn DecodedMessage::fnc1_positions(Self) -> Array[Int]
 pub fn DecodedMessage::text(Self) -> String raise DecodeError
 
 pub(all) struct EncodeOptions {
@@ -49,6 +75,22 @@ pub(all) struct EncodeOptions {
 } derive(Eq)
 pub fn EncodeOptions::equal(Self, Self) -> Bool
 pub fn EncodeOptions::not_equal(Self, Self) -> Bool
+
+pub(all) struct MessageOptions {
+  symbol : EncodeOptions
+  gs1 : Bool
+  macro_kind : Int
+  reader_programming : Bool
+  append : AppendHeader?
+}
+pub fn MessageOptions::new(symbol? : EncodeOptions, gs1? : Bool, macro_kind? : Int, reader_programming? : Bool, append? : AppendHeader?) -> Self
+
+pub(all) enum MessageSegment {
+  Data(Bytes)
+  Text(String, Int)
+  Eci(Int)
+  Fnc1
+}
 
 pub(all) enum Shape {
   Square
