@@ -19,10 +19,10 @@ for eci, codec in codecs.items():
             if len(t)==1: dec[n]=ord(t)
         except UnicodeError: pass
     enc = {}
-    for cp in set(dec.values()) | {0x00a5,0x203e}:
+    for cp in set(dec.values()):
         try:
             b = chr(cp).encode(codec,'strict')
-            if len(b)<=2: enc[cp]=int.from_bytes(b,'big')
+            if len(b)<=2 and b.decode(codec,'strict') == chr(cp): enc[cp]=int.from_bytes(b,'big')
         except UnicodeError: pass
     (root/f'charset/table_{eci}.mbt').write_text('// Generated from CPython '+sys.version.split()[0]+' '+codec+' codec; PSF license.\n///|\nlet decode_'+str(eci)+' : Bytes = '+literal(packed(sorted(dec.items()),2,3))+'\n///|\nlet encode_'+str(eci)+' : Bytes = '+literal(packed(sorted(enc.items()),3,2))+'\n')
 ranges=[]

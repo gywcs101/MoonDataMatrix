@@ -37,26 +37,47 @@ pub fn DecodedMessage::eci_changes(self : DecodedMessage) -> Array[(Int, Int)] {
 ///|
 pub fn DecodedMessage::text(self : DecodedMessage) -> String raise DecodeError {
   let out = StringBuilder()
+  fn chunk(start : Int, end : Int, eci : Int) -> Unit raise DecodeError {
+    let mut pos = start
+    for sep in self.separators {
+      if sep < start || sep >= end {
+        continue
+      }
+      if sep > pos {
+        out.write_string(
+          @charset.decode(
+            Bytes::makei(sep - pos, fn(i) { self.payload[pos + i] }),
+            eci,
+          ) catch {
+            _ => raise InvalidText
+          },
+        )
+      }
+      out.write_char('\u001d')
+      pos = sep + 1
+    }
+    if end > pos {
+      out.write_string(
+        @charset.decode(
+          Bytes::makei(end - pos, fn(i) { self.payload[pos + i] }),
+          eci,
+        ) catch {
+          _ => raise InvalidText
+        },
+      )
+    }
+  }
   let mut start = 0
   let mut active = 3
   for (offset, eci) in self.ecis {
-    let bytes = Bytes::makei(offset - start, fn(i) { self.payload[start + i] })
-    out.write_string(
-      @charset.decode(bytes, active) catch {
-        _ => raise InvalidText
-      },
-    )
+    chunk(start, offset, active)
     start = offset
     active = eci
   }
-  let bytes = Bytes::makei(
-    self.payload.length() - start - (if self.macro_kind != 0 { 2 } else { 0 }),
-    fn(i) { self.payload[start + i] },
-  )
-  out.write_string(
-    @charset.decode(bytes, active) catch {
-      _ => raise InvalidText
-    },
+  chunk(
+    start,
+    self.payload.length() - (if self.macro_kind != 0 { 2 } else { 0 }),
+    active,
   )
   if self.macro_kind != 0 {
     out.write_string("\u001e\u0004")

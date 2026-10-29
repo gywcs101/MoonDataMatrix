@@ -44,3 +44,16 @@ test "charset mapping round trips and strict unicode" {
   }
   assert_true(failed)
 }
+
+///|
+test "strict conversion rejects lossy JIS aliases" {
+  for text in ["¥", "‾"] {
+    let failed = try {
+      ignore(encode(text, 20))
+      false
+    } catch {
+      _ => true
+    }
+    assert_true(failed)
+  }
+}

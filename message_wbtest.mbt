@@ -89,3 +89,78 @@ test "append split and reassembly" {
   }
   assert_true(failed)
 }
+
+///|
+test "control known vectors and incompatible options" {
+  for
+    (eci, expected) in [
+      (126, [241, 127]),
+      (127, [241, 128, 1]),
+      (16382, [241, 191, 254]),
+      (16383, [241, 192, 1, 1]),
+      (999999, [241, 207, 63, 129]),
+    ] {
+    let out = []
+    append_eci(out, eci)
+    assert_eq(out, expected)
+  }
+  let c40 = decode_data([230, 10, 121, 254], 0)
+  assert_eq(c40.bytes(), b"\x1d")
+  assert_eq(c40.fnc1_positions(), [0])
+  for
+    opts in [
+      MessageOptions::new(gs1=true, reader_programming=true),
+      MessageOptions::new(gs1=true, macro_kind=5),
+      MessageOptions::new(macro_kind=4),
+      MessageOptions::new(
+        append=Some({ index: 0, count: 2, file_id1: 1, file_id2: 1, }),
+      ),
+    ] {
+    let failed = try {
+      ignore(encode_message([Data(b"A")], options=opts))
+      false
+    } catch {
+      _ => true
+    }
+    assert_true(failed)
+  }
+  for
+    data in [
+      [233, 1, 0, 1],
+      [234, 234],
+      [236, 236],
+      [241, 208],
+      [241, 192, 0, 1],
+    ] {
+    let failed = try {
+      ignore(decode_data(data, 0))
+      false
+    } catch {
+      _ => true
+    }
+    assert_true(failed)
+  }
+}
+
+///|
+test "text controls preserve charset boundaries and small append inputs" {
+  assert_eq(
+    decode_matrix(
+      encode_message([Text("中", 25), Fnc1, Text("文", 25)]).matrix(),
+    ).text(),
+    "中\u001d文",
+  )
+  assert_eq(
+    encode_append_bytes(b"A", 1, 1, options={ shape: Fixed(10, 10), }).length(),
+    1,
+  )
+  assert_eq(
+    decode_matrix(
+      encode_message(
+        [Text("中文", 25)],
+        options=MessageOptions::new(macro_kind=5),
+      ).matrix(),
+    ).text(),
+    "[)>\u001e05\u001d中文\u001e\u0004",
+  )
+}

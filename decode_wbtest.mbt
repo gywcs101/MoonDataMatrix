@@ -72,3 +72,40 @@ test "decode rejects malformed matrix and invalid data" {
     assert_true(failed)
   }
 }
+
+///|
+test "deterministic decoder corpus and uncorrectable block" {
+  let alphabets = [
+    b"ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    b"abcdefghijklmnopqrstuvwxyz",
+    b"0123456789",
+    b"ABC*> 123",
+    b"@^?;",
+    Bytes::makei(256, fn(i) { i.to_byte() }),
+  ]
+  let mut seed = 20261029
+  for n in 1..<100 {
+    for alphabet in alphabets {
+      let data = Bytes::makei(n, fn(_) {
+        seed = (seed * 1103515245 + 12345) & 0x7fffffff
+        alphabet[seed % alphabet.length()]
+      })
+      assert_eq(decode_matrix(encode_bytes(data).matrix()).bytes(), data)
+    }
+  }
+  let size = sizes[0]
+  let words = [1, 2, 3]
+  for cw in error_code(words.copy(), size) {
+    words.push(cw)
+  }
+  words[0] = words[0] ^ 43
+  words[1] = words[1] ^ 79
+  words[2] = words[2] ^ 123
+  let failed = try {
+    ignore(correct_block(words, size.ecc))
+    false
+  } catch {
+    _ => true
+  }
+  assert_true(failed)
+}

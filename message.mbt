@@ -80,7 +80,13 @@ pub fn encode_message(
         let bytes = @charset.encode(text, eci) catch {
           _ => raise InvalidOption("charset conversion failed")
         }
-        normalized.push(Eci(eci))
+        if options.gs1 {
+          if eci != 3 {
+            raise InvalidOption("GS1 text requires Latin-1")
+          }
+        } else {
+          normalized.push(Eci(eci))
+        }
         normalized.push(Data(bytes))
       }
       _ => normalized.push(segment)
@@ -133,7 +139,12 @@ pub fn encode_message(
   for i in 0..<segments.length() {
     match segments[i] {
       Text(_, _) => raise InvalidOption("internal text normalization")
-      Eci(n) => append_eci(out, n)
+      Eci(n) => {
+        if options.gs1 {
+          raise InvalidOption("GS1 uses its element-string character set")
+        }
+        append_eci(out, n)
+      }
       Fnc1 => {
         if options.reader_programming || options.macro_kind != 0 {
           raise InvalidOption("FNC1 with control header")

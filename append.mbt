@@ -7,6 +7,22 @@ pub fn encode_append_bytes(
   options? : EncodeOptions = { shape: Square, },
   eci? : Int? = None,
 ) -> Array[Symbol] raise EncodeError {
+  if !valid_append({ index: 1, count: 2, file_id1, file_id2, }) {
+    raise InvalidOption("invalid append file ID")
+  }
+  let single = try {
+    let segments = match eci {
+      Some(e) => [Eci(e), Data(data)]
+      None => [Data(data)]
+    }
+    Some(encode_message(segments, options=MessageOptions::new(symbol=options)))
+  } catch {
+    CapacityExceeded => None
+    e => raise e
+  }
+  if single is Some(symbol) {
+    return [symbol]
+  }
   let parts : Array[Bytes] = []
   let mut offset = 0
   while offset < data.length() || parts.is_empty() {
@@ -95,6 +111,16 @@ pub fn encode_append_text(
   file_id2 : Int,
   options? : EncodeOptions = { shape: Square, },
 ) -> Array[Symbol] raise EncodeError {
+  if !valid_append({ index: 1, count: 2, file_id1, file_id2, }) {
+    raise InvalidOption("invalid append file ID")
+  }
+  let single = Some(encode_text(text, options~)) catch {
+    CapacityExceeded => None
+    e => raise e
+  }
+  if single is Some(symbol) {
+    return [symbol]
+  }
   let chars = text.to_array()
   let parts : Array[String] = []
   let mut offset = 0
