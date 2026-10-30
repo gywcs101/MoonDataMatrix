@@ -33,3 +33,6 @@ __pycache__/
 /symbols.json
 /matrix.json
 /parts.json
+/gs1-labels/
+/device.json
+/exchange.json

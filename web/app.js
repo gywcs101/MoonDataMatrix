@@ -10,7 +10,7 @@ const hint=document.createElement('p');hint.id='input-hint';$('input').before(hi
 const basis=document.createElement('p');basis.id='text-basis';$('decoded-text').before(basis);
 const raw=document.createElement('p');raw.id='decoded-hex';raw.style.overflowWrap='anywhere';$('decoded-text').after(raw);
 const total=document.createElement('section');total.id='assembled';total.hidden=true;total.innerHTML='<h3>完整重组内容</h3><p id="assembled-text" style="white-space:pre-wrap;overflow-wrap:anywhere"></p><p id="assembled-error" role="alert"></p>';$('decoded').closest('details').after(total);
-function updateOptions(){const k=$('kind').value;$('eci').disabled=k!=='eci';$('size').disabled=$('shape').value!=='fixed';hint.textContent=k==='gs1'?'GS1 使用 ISO-8859-1；输入 ␝ 表示 FNC1 字段分隔符。':k==='text'||k==='split'?'文本使用 UTF-8（ECI 26）。':k==='eci'?'文本使用所选字符集。':'';}
+function updateOptions(){const k=$('kind').value;$('eci').disabled=k!=='eci';const json=['message','matrix','assemble'].includes(k);$('shape').disabled=json;$('size').disabled=json||$('shape').value!=='fixed';hint.textContent=k==='gs1'?'GS1 使用 ISO-8859-1；输入 ␝ 表示 FNC1 字段分隔符。':k==='text'||k==='split'?'文本使用 UTF-8（ECI 26）；中文读取设备需支持 UTF-8 ECI。':k==='eci'?'文本使用所选字符集。':k==='matrix'?'请输入包含定位边的黑白模块矩阵 JSON；照片需先完成定位和采样。':k==='message'?'字符集与尺寸以消息 JSON 中的选项为准。':'';}
 function invalidate(){current=null;collection=null;$('preview').replaceChildren();$('symbol').replaceChildren();$('symbol').disabled=true;$('decoded').textContent='';$('decoded-text').textContent='';basis.textContent='';raw.textContent='';total.hidden=true;$('assembled-text').textContent='';$('assembled-error').textContent='';$('preview').style.display='grid';$('json').textContent='下载矩阵 JSON';$('meta').textContent='';$('svg').disabled=$('png').disabled=$('json').disabled=true;}
 function displayText(decoded){if(decoded.text==null)return '无法转换为文本，请查看原始字节。';let pos=0;return Array.from(decoded.text,c=>{const at=pos;pos+=decoded.gs1?1:new TextEncoder().encode(c).length;if(c==='\x1d'&&decoded.gs1&&decoded.fnc1_positions.includes(at))return '␝';return /[\x00-\x08\x0b-\x1f\x7f-\x9f]/.test(c)?'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'):c;}).join('');}
 function showDecoded(decoded){
@@ -64,8 +64,10 @@ const examples=[
  ['gs1','010123456789012810BATCH␝21SERIAL','square'],
  ['text','DEVICE-2026-001','dmre'],
  ['message',JSON.stringify({segments:[{text:'中文',eci:29},{text:'日本語',eci:20},{text:'🙂',eci:32}]},null,2),'square'],
- ['split','设备配置：中文🙂'.repeat(12),'fixed']
+ ['split','设备配置：中文🙂'.repeat(12),'fixed'],
+ ['message',JSON.stringify({split:true,shape:'fixed',width:26,height:26,segments:[{text:'中文设备配置与校准记录。'.repeat(3),eci:29},{text:'日本語の検査記録。'.repeat(3),eci:20},{text:'🙂🧪',eci:26}]},null,2),'fixed']
 ];
+const mixedButton=document.createElement('button');mixedButton.dataset.example='7';mixedButton.textContent='多字符集自动分片';document.querySelector('.examples').append(mixedButton);
 for(const b of document.querySelectorAll('[data-example]'))b.onclick=()=>{const [kind,input,shape]=examples[Number(b.dataset.example)];$('kind').value=kind;$('input').value=input;$('shape').value=shape;if(kind==='split')$('size').value='26x26';updateOptions();render();};
 updateOptions();
 render();

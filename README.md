@@ -43,7 +43,7 @@ moon work init
 moon work use MoonDataMatrix myapp
 ```
 
-在应用的 `moon.mod` 中将 `"gywcs101/MoonDataMatrix@0.1.0"` 加入 `import` 块，再在使用该库的包中添加下面的导入。工作区会使用本地源码模块。
+在应用的 `moon.mod` 中将 `"gywcs101/MoonDataMatrix@0.2.0"` 加入 `import` 块，再在使用该库的包中添加下面的导入。工作区会使用本地源码模块。
 
 ## 库接口
 
@@ -158,7 +158,7 @@ moon run cmd/main --target native -- assemble --input parts.json
 
 消息文件中的 `segments` 按顺序排列，每段使用 `text`（可带 `eci`，默认 26）、`hex`（可带 `eci`）、独立 `eci`，或 `fnc1: true`。顶层可设置 `gs1`、`macro`、`reader_programming`、`append` 和尺寸选项。完整示例见 [多字符集消息](examples/multilingual-message.json)、[DMRE 标签](examples/dmre-message.json)、[Macro](examples/macro-message.json) 和 [读取器编程](examples/reader-message.json)。
 
-自动分片使用 `split: true` 和 `text` / `hex` 中的一项，指定 `file_id1`、`file_id2` 及尺寸即可。`append` 用于手动分片，包含 `index`、`count`、`file_id1`、`file_id2`。
+自动分片使用 `split: true` 和 `text` / `hex` / `segments` 中的一项，指定 `file_id1`、`file_id2` 及尺寸即可。`segments` 可混合字符集文本、原始字节、ECI 和 FNC1；文本按字符边界分片，每片保留独立读取所需的 ECI 状态。库入口为 `encode_append_message(segments, file_id1, file_id2, options=...)`，其中 `options` 为 `MessageOptions`。Macro 和 Reader Programming 消息应装入单个符号。`append` 用于手动分片，包含 `index`、`count`、`file_id1`、`file_id2`。
 
 `message` 输出 `symbols` 数组，每项包含宽高、布尔矩阵、SVG 和解码结果。`decode` 接受布尔矩阵或包含 `matrix` 的对象；`assemble` 接受矩阵对象数组或 `symbols` 对象。解码 JSON 包含十六进制数据、文本、ECI 偏移及控制信息；文本不能转换时为 `null`，原始字节仍可读取。
 
@@ -171,7 +171,25 @@ moon run cmd/main --target native -- assemble --input parts.json
 {"id":"asset-0002","hex":"00ff01"}
 ```
 
-每行必须有 `id`，以及 `text` / `hex` 中恰好一个字符串字段；未知字段报错。`id` 只允许 ASCII 字母、数字、下划线和连字符，长度 1～100；为跨平台一致性，拒绝 Windows 保留设备名及大小写不敏感的重复 ID。空行无效，文件最后一个换行允许存在。
+每行必须有 `id`，以及 `text` / `hex` / `message` 中恰好一项；`message` 为上述高级消息对象，选项在对象内指定。普通输入和单符号消息写为 `<id>.svg`；高级消息另附 `<id>.json` 矩阵集合，多符号消息写入 `<id>/part-01.svg` 等和 `<id>/symbols.json`。未知字段报错。`id` 只允许 ASCII 字母、数字、下划线和连字符，长度 1～100；为跨平台一致性，拒绝 Windows 保留设备名及大小写不敏感的重复 ID。空行无效，文件最后一个换行允许存在。
+
+### 三条完整使用链
+
+```sh
+moon run cmd/main --target native -- batch --input examples/gs1-batch.jsonl --output gs1-labels
+moon run cmd/main --target native -- assemble --input gs1-labels/batch-a.json
+```
+
+批次附带的是符号集合；取其 `symbols[0]` 对象交给 `decode`，或将整个单符号集合交给 `assemble`，即可读取 GS1 标识、字段分隔与商品数据。
+
+```sh
+moon run cmd/main --target native -- encode --message-file examples/dmre-message.json --format json --output device.json
+moon run cmd/main --target native -- assemble --input device.json
+moon run cmd/main --target native -- message --input examples/mixed-append.json --output exchange.json
+moon run cmd/main --target native -- assemble --input exchange.json
+```
+
+DMRE 输出包含 SVG、矩阵与解码结果，可用于设备标签；多字符集消息由接收端逐矩阵解码、按文件标识重组，恢复中文、日文与 Unicode 内容。
 
 输出目录必须不存在。全部条目成功后才发布最终目录；错误报告包含行号和条目 ID。批次内容会先保存在内存中，适合中小规模批次。
 

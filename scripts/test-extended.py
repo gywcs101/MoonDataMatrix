@@ -97,4 +97,15 @@ with tempfile.TemporaryDirectory() as td:
  # Literal GS is preserved as data, not mistaken for FNC1 metadata.
  literal=request({'segments':[{'hex':'411d42'}]})['symbols'][0]['decoded']
  assert literal['hex']=='411d42' and literal['fnc1_positions']==[]
+ # Execute the three README scenarios from the shipped example files.
+ scenario=d/'scenario-gs1'
+ call(['batch','--input',root/'examples/gs1-batch.jsonl','--output',scenario])
+ for label in ['batch-a','batch-b']:
+  assert json.loads(call(['assemble','--input',scenario/(label+'.json')]))['gs1']
+ device=json.loads(call(['encode','--message-file',root/'examples/dmre-message.json','--format','json']))
+ f.write_text(json.dumps(device),encoding='utf8')
+ assert json.loads(call(['assemble','--input',f]))['text']=='DEVICE-2026-001'
+ exchange=call(['message','--input',root/'examples/mixed-append.json'])
+ f.write_text(exchange,encoding='utf8')
+ assert json.loads(call(['assemble','--input',f]))['text']=='设备配置：中文样本，温度传感器，校准信息。日本語の機器設定と検査記録。Unicode：🙂🧪'
 print('Extended ECI, GS1, Macro, append, strict inputs and external-encoder decoding passed')

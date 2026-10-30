@@ -1,7 +1,7 @@
 import subprocess, shutil, hashlib
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
-subprocess.run(['moon','build','--target','js'],cwd=root,check=True)
+subprocess.run(['moon','build','--target','js','--target-dir',str(root/'_build')],cwd=root,check=True)
 files=list((root/'_build').rglob('webbridge.js'))
 assert files,'compiled JS bridge missing'
 source=max(files,key=lambda p:p.stat().st_mtime)

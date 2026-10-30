@@ -2,7 +2,7 @@
 
 ## Source
 
-`jannschu/datamatrix-rs` at `af189538aee8f029dd58f317ebd4c006c9837ac2`, MIT option. Only encoding-related algorithms are ported. Matrix decoding includes six-mode payload recovery and Reed–Solomon error correction.
+`jannschu/datamatrix-rs` at `af189538aee8f029dd58f317ebd4c006c9837ac2`, MIT option. Encoding, sizes, placement traversal and six-mode data decoding are ported or adapted. Reed–Solomon decoding is an original implementation.
 
 | MoonBit file | Upstream source | Adaptation |
 |---|---|---|
@@ -24,7 +24,7 @@ The six-mode optimizer is ported from the pinned upstream implementation. The pu
 
 One deliberate determinism adjustment: upstream uses an unstable cost-only sort before pruning. Equal-cost order can depend on the language/runtime sorting implementation. This port uses the upstream final tie preferences (maximum mode complexity, then switch count) during that sorting step too, with stable order for exact ties. It does not change primary cost ordering. A UTF-8 ECI `Hello, World!` regression covers this adjustment. No universal global-optimality claim is made.
 
-The pinned Rust reference runner compares padded data codewords, complete data/ECC codewords and every matrix cell. The current deterministic corpus has 172 cases, including all 30 sizes, mode-oriented alphabets, binary length boundaries and 144×144. All matched exactly in the recorded validation. This is regression evidence, not a proof for all inputs.
+The pinned Rust reference runner compares padded data codewords, complete data/ECC codewords and every matrix cell. The deterministic corpus has 190 cases, including all 48 classic and DMRE sizes, mode-oriented alphabets, binary length boundaries and 144×144. All matched exactly in the recorded validation. This is regression evidence, not a proof for all inputs.
 
 ## Intentional API differences
 
