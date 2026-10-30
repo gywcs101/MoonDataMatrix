@@ -1,0 +1,2 @@
+{"id":"batch-a","message":{"gs1":true,"segments":[{"text":"010123456789012810BATCH-A","eci":3},{"fnc1":true},{"text":"21SERIAL-001","eci":3}]}}
+{"id":"batch-b","message":{"gs1":true,"segments":[{"text":"010123456789012810BATCH-B","eci":3},{"fnc1":true},{"text":"21SERIAL-002","eci":3}]}}

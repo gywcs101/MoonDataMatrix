@@ -60,7 +60,9 @@ fn svg(
 fn clean_stage(stage : String) -> Unit {
   try {
     for name in @fs.read_dir(stage) {
-      @fs.remove_file(stage + "/" + name)
+      @fs.remove_file(stage + "/" + name) catch {
+        _ => clean_stage(stage + "/" + name)
+      }
     }
     @fs.remove_dir(stage)
   } catch {
@@ -170,19 +172,61 @@ fn batch(
       }
       ids[key] = true
       for key, _ in obj {
-        if key != "id" && key != "text" && key != "hex" {
+        if key != "id" && key != "text" && key != "hex" && key != "message" {
           fail(3, "unknown field: \{key}")
         }
       }
       if obj.length() != 2 {
         fail(3, "expected exactly one of text or hex")
       }
+      if obj.get("message") is Some(message) {
+        let symbols = @protocol.encode_request(message) catch {
+          e => raise CliError(3, @debug.to_string(e))
+        }
+        if symbols.length() == 1 {
+          results.push(
+            (
+              id + ".svg",
+              @lib.render_svg(symbols[0]) catch {
+                e => raise CliError(3, @debug.to_string(e))
+              },
+            ),
+          )
+        } else {
+          for i in 0..<symbols.length() {
+            let n = (i + 1).to_string()
+            results.push(
+              (
+                id + "/part-" + (if i < 9 { "0" } else { "" }) + n + ".svg",
+                @lib.render_svg(symbols[i]) catch {
+                  e => raise CliError(3, @debug.to_string(e))
+                },
+              ),
+            )
+          }
+        }
+        let matrices : Array[Json] = symbols.map(fn(s) {
+          { "matrix": s.matrix(), "width": s.width(), "height": s.height() }
+        })
+        let data : Json = { "symbols": matrices }
+        results.push(
+          (
+            if symbols.length() == 1 {
+              id + ".json"
+            } else {
+              id + "/symbols.json"
+            },
+            data.stringify(),
+          ),
+        )
+        continue
+      }
       let content = match (obj.get("text"), obj.get("hex")) {
         (Some(String(s)), None) => svg(s, false, options)
         (None, Some(String(s))) => svg(s, true, options)
         _ => raise CliError(3, "text or hex must be a string")
       }
-      results.push((id, content))
+      results.push((id + ".svg", content))
     } catch {
       CliError(code, message) =>
         raise CliError(code, "line \{line_number}, id \{id}: \{message}")
@@ -194,7 +238,13 @@ fn batch(
   let stage = create_stage(target)
   errdefer clean_stage(stage)
   for (id, content) in results {
-    write_staged(stage + "/" + id + ".svg", content)
+    let pieces = id.split("/").map(fn(s) { s.to_owned() }).to_array()
+    if pieces.length() > 1 && !@fs.path_exists(stage + "/" + pieces[0]) {
+      @fs.create_dir(stage + "/" + pieces[0]) catch {
+        _ => raise CliError(4, "cannot create batch item directory")
+      }
+    }
+    write_staged(stage + "/" + id, content)
   }
   if publish(c_string(stage), c_string(target)) != 0 {
     fail(4, "cannot publish batch directory")

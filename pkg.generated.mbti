@@ -14,6 +14,8 @@ pub fn dimensions_for_codewords(Int, options? : EncodeOptions) -> (Int, Int) rai
 
 pub fn encode_append_bytes(Bytes, Int, Int, options? : EncodeOptions, eci? : Int?) -> Array[Symbol] raise EncodeError
 
+pub fn encode_append_message(Array[MessageSegment], Int, Int, options? : MessageOptions) -> Array[Symbol] raise EncodeError
+
 pub fn encode_append_text(String, Int, Int, options? : EncodeOptions) -> Array[Symbol] raise EncodeError
 
 pub fn encode_bytes(Bytes, options? : EncodeOptions) -> Symbol raise EncodeError

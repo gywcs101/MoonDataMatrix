@@ -77,7 +77,7 @@ pub fn encode_request(value : Json) -> Array[@lib.Symbol] raise {
     "height", "split", "text", "hex", "file_id1", "file_id2",
   ])
   let symbol = options(obj)
-  if flag(obj, "split") {
+  if flag(obj, "split") && !obj.contains("segments") {
     keys(obj, [
       "split", "text", "hex", "file_id1", "file_id2", "shape", "width", "height",
     ])
@@ -91,7 +91,12 @@ pub fn encode_request(value : Json) -> Array[@lib.Symbol] raise {
       _ => raise InvalidRequest("split requires exactly one text or hex")
     }
   }
-  for k in ["text", "hex", "file_id1", "file_id2"] {
+  for
+    k in (if flag(obj, "split") {
+      ["text", "hex"]
+    } else {
+      ["text", "hex", "file_id1", "file_id2"]
+    }) {
     if obj.contains(k) {
       raise InvalidRequest("field requires split: \{k}")
     }
@@ -140,6 +145,20 @@ pub fn encode_request(value : Json) -> Array[@lib.Symbol] raise {
       }
       _ => raise InvalidRequest("segment requires one text, hex, eci or fnc1")
     }
+  }
+  if flag(obj, "split") {
+    return @lib.encode_append_message(
+      segments,
+      number(obj, "file_id1", 1),
+      number(obj, "file_id2", 1),
+      options=@lib.MessageOptions::new(
+        symbol~,
+        gs1=flag(obj, "gs1"),
+        macro_kind=number(obj, "macro", 0),
+        reader_programming=flag(obj, "reader_programming"),
+        append~,
+      ),
+    )
   }
   [
     @lib.encode_message(

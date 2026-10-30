@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image
 import zxingcpp
 root=Path(__file__).resolve().parents[1]
-subprocess.run(['moon','build','--target','native'],cwd=root,check=True)
+subprocess.run(['moon','build','--target','native','--target-dir',str(root/'_build')],cwd=root,check=True)
 exe=max((p for p in (root/'_build').rglob('*') if p.is_file() and p.name in ('main.exe','main') and p.parent.name=='main'),key=lambda p:p.stat().st_mtime)
 def call(args,code=0):
  p=subprocess.run([str(exe),*map(str,args)],capture_output=True,encoding='utf8')
@@ -71,4 +71,30 @@ with tempfile.TemporaryDirectory() as td:
    if damaged:assert read['corrected_codewords']==1
  for bad in [{'segments':[{'eci':1000000}]},{'segments':[],'reader_programming':True,'gs1':True},{'segments':[{'text':'🙂','eci':29}]},{'segments':[],'append':{'index':1,'count':1,'file_id1':1,'file_id2':1}},{'segments':[{'text':'a','extra':1}]}]:
   f.write_text(json.dumps(bad),encoding='utf8');call(['message','--input',f],3)
+ # Mixed ECI automatic splitting: independent per-symbol byte recovery.
+ segments=[{'text':'中文'*12,'eci':29},{'text':'日本語'*8,'eci':20},{'text':'🙂'*6,'eci':26}]
+ mixed_request={'split':True,'segments':segments,'shape':'fixed','width':26,'height':26}
+ mixed=request(mixed_request)
+ assert 1<len(mixed['symbols'])<=16
+ recovered=b''
+ for symbol in mixed['symbols']:
+  read=zxingcpp.read_barcode(raster(symbol['matrix']),formats=zxingcpp.BarcodeFormat.DataMatrix)
+  assert read and read.bytes==bytes.fromhex(symbol['decoded']['hex'])
+  recovered+=read.bytes
+ assert recovered==('中文'*12).encode('gb2312')+('日本語'*8).encode('shift_jis')+('🙂'*6).encode()
+ f.write_text(json.dumps({'symbols':list(reversed(mixed['symbols']))}),encoding='utf8')
+ assert json.loads(call(['assemble','--input',f]))['text']=='中文'*12+'日本語'*8+'🙂'*6
+ batch=d/'batch.jsonl';out=d/'labels'
+ gs_message={'gs1':True,'segments':[{'text':'010123456789012810BATCH','eci':3},{'fnc1':True},{'text':'21SERIAL','eci':3}]}
+ batch.write_text('\n'.join(json.dumps(x) for x in [{'id':'gs1','message':gs_message},{'id':'mixed','message':mixed_request}]),encoding='utf8')
+ call(['batch','--input',batch,'--output',out])
+ assert (out/'gs1.svg').exists() and (out/'mixed/part-01.svg').exists()
+ f.write_text(json.dumps(json.loads((out/'gs1.json').read_text())['symbols'][0]),encoding='utf8')
+ gs_read=json.loads(call(['decode','--input',f]));assert gs_read['gs1'] and len(gs_read['fnc1_positions'])==1
+ call(['batch','--input',batch,'--output',out],4)
+ batch.write_text(batch.read_text()+'\n'+json.dumps({'id':'bad','message':{'segments':[{'eci':1000000}]}}),encoding='utf8')
+ call(['batch','--input',batch,'--output',d/'badlabels'],3);assert not (d/'badlabels').exists()
+ # Literal GS is preserved as data, not mistaken for FNC1 metadata.
+ literal=request({'segments':[{'hex':'411d42'}]})['symbols'][0]['decoded']
+ assert literal['hex']=='411d42' and literal['fnc1_positions']==[]
 print('Extended ECI, GS1, Macro, append, strict inputs and external-encoder decoding passed')
