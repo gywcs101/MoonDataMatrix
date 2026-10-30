@@ -80,7 +80,8 @@ try{
  await page.locator('[data-example="7"]').click();
  assert.equal(await page.locator('#error').textContent(),'');
  assert.equal(await page.locator('#assembled-text').textContent(),'中文设备配置与校准记录。'.repeat(3)+'日本語の検査記録。'.repeat(3)+'🙂🧪');
- assert.ok(await page.locator('#shape').isDisabled());
+ assert.ok(await page.locator('#shape').isEnabled());
+ await page.locator('#kind').selectOption('message');
  await page.locator('#input').fill('invalid json');await page.locator('#generate').click();
  assert.ok(await page.locator('#json').isDisabled());
  await page.locator('[data-example="0"]').click();
@@ -114,6 +115,48 @@ try{
   assert.ok(await page.locator('#json').isDisabled());assert.equal(await page.locator('#preview svg').count(),0);
  }
  await page.locator('[data-example="1"]').click();assert.equal(await page.locator('#error').textContent(),'');
+ // The default text workflow exposes all encodings without a second mode switch.
+ assert.ok(await page.locator('#eci').isEnabled());await page.locator('#eci').selectOption('29');
+ await page.locator('#input').fill('中文');await page.locator('#generate').click();
+ assert.equal(JSON.parse(await page.locator('#decoded').textContent()).eci[0].eci,29);
+ // New examples and top-level operations are real actions, not decorative links.
+ for(const index of [8,9,10,11,12]) {
+  await page.locator(`[data-example="${index}"]`).click();
+  assert.equal(await page.locator('#error').textContent(),'');
+  const decoded=JSON.parse(await page.locator('#decoded').textContent());
+  if(index===8){assert.equal(decoded.macro,5);await page.locator('#control').selectOption('macro6');await page.locator('#generate').click();assert.equal(JSON.parse(await page.locator('#decoded').textContent()).macro,6);}
+  if(index===9)assert.equal(decoded.reader_programming,true);
+  if(index===10){assert.equal(decoded.gs1,true);assert.equal(await page.locator('#symbol option').count(),2);assert.ok(await page.locator('#assembled').isHidden());}
+  if(index===11)assert.equal(decoded.corrected_codewords,1);
+  if(index===12)assert.ok(decoded.text.includes('日本語'));
+ }
+ await page.locator('[data-view="batch"]').click();
+ const batchInput=await page.locator('#input').inputValue();
+ await page.locator('#input').fill(batchInput+'\n'+batchInput.split('\n')[0]);await page.locator('#generate').click();
+ assert.ok((await page.locator('#error').textContent()).includes('重复'));assert.ok(await page.locator('#json').isDisabled());
+ await page.locator('[data-view="matrix"]').click();assert.equal(await page.locator('#kind').inputValue(),'matrix');
+ await page.locator('[data-view="assemble"]').click();assert.equal(await page.locator('#kind').inputValue(),'assemble');
+ await page.locator('[data-view="encode"]').click();
+ await page.locator('[data-example="7"]').click();
+ assert.equal(await page.locator('#segment-list .segment').count(),3);
+ await page.locator('#segment-list textarea').first().fill('新配置');await page.locator('#generate').click();
+ assert.ok((await page.locator('#assembled-text').textContent()).startsWith('新配置'));
+ await page.locator('#add-segment').click();assert.equal(await page.locator('#segment-list .segment').count(),4);
+ await page.locator('#segment-list .segment').last().getByRole('button',{name:'删除数据段'}).click();
+ assert.equal(await page.locator('#segment-list .segment').count(),3);
+ await page.locator('[data-view="matrix"]').click();
+ await page.locator('#file').setInputFiles({name:'matrix.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(binarySet.symbols[0]))});
+ assert.equal(await page.locator('#kind').inputValue(),'matrix');
+ assert.equal(JSON.parse(await page.locator('#decoded').textContent()).hex,'00010203fffe807f');
+ await page.locator('[data-example="1"]').click();await page.locator('#input').fill('保留工作草稿');
+ await page.locator('[data-view="matrix"]').click();await page.locator('[data-view="encode"]').click();
+ assert.equal(await page.locator('#input').inputValue(),'保留工作草稿');
+ await page.locator('[data-example="7"]').click();
+ await page.screenshot({path:resolve(output,'workspace-desktop.png'),fullPage:true});
+ const category=await page.locator('.examples h3').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize));
+ const item=await page.locator('[data-example="1"]').evaluate(e=>parseFloat(getComputedStyle(e).fontSize));assert.ok(category>=item);
+ await page.setViewportSize({width:375,height:800});
+ await page.screenshot({path:resolve(output,'workspace-mobile.png'),fullPage:true});
  await page.setViewportSize({width:375,height:800});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  assert.deepEqual(errors,[]);console.log('Browser preview, stale-output clearing, errors and SVG/PNG downloads passed');
