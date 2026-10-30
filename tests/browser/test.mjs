@@ -146,11 +146,18 @@ try{
  assert.equal(await page.locator('#segment-list .segment').count(),3);
  await page.locator('[data-view="matrix"]').click();
  await page.locator('#file').setInputFiles({name:'matrix.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(binarySet.symbols[0]))});
+ await page.waitForFunction(()=>document.getElementById('decoded').textContent.includes('00010203fffe807f'));
  assert.equal(await page.locator('#kind').inputValue(),'matrix');
  assert.equal(JSON.parse(await page.locator('#decoded').textContent()).hex,'00010203fffe807f');
  await page.locator('[data-example="1"]').click();await page.locator('#input').fill('保留工作草稿');
  await page.locator('[data-view="matrix"]').click();await page.locator('[data-view="encode"]').click();
  assert.equal(await page.locator('#input').inputValue(),'保留工作草稿');
+ await page.evaluate(()=>{window.originalFileText=File.prototype.text;File.prototype.text=function(){return new Promise(resolve=>{window.finishImport=()=>resolve('{"segments":[{"text":"过期输入"}]}');});};});
+ await page.locator('#file').setInputFiles({name:'slow.json',mimeType:'application/json',buffer:Buffer.from('{}')});
+ await page.waitForFunction(()=>typeof window.finishImport==='function');
+ await page.locator('[data-example="0"]').click();
+ await page.evaluate(()=>{window.finishImport();File.prototype.text=window.originalFileText;});
+ assert.equal(await page.locator('#input').inputValue(),'ASSET-2026-0001');
  await page.locator('[data-example="7"]').click();
  await page.screenshot({path:resolve(output,'workspace-desktop.png'),fullPage:true});
  const category=await page.locator('.examples h3').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize));
