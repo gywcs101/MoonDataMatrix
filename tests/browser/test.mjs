@@ -124,7 +124,7 @@ try{
   await page.locator(`[data-example="${index}"]`).click();
   assert.equal(await page.locator('#error').textContent(),'');
   const decoded=JSON.parse(await page.locator('#decoded').textContent());
-  if(index===8){assert.equal(decoded.macro,5);await page.locator('#control').selectOption('macro6');await page.locator('#generate').click();assert.equal(JSON.parse(await page.locator('#decoded').textContent()).macro,6);}
+  if(index===8){assert.equal(decoded.macro,5);assert.ok(await page.locator('#file-id1').isHidden());await page.locator('#control').selectOption('macro6');await page.locator('#generate').click();assert.equal(JSON.parse(await page.locator('#decoded').textContent()).macro,6);}
   if(index===9)assert.equal(decoded.reader_programming,true);
   if(index===10){assert.equal(decoded.gs1,true);assert.equal(await page.locator('#symbol option').count(),2);assert.ok(await page.locator('#assembled').isHidden());}
   if(index===11)assert.equal(decoded.corrected_codewords,1);
@@ -152,6 +152,7 @@ try{
  await page.locator('[data-example="1"]').click();await page.locator('#input').fill('保留工作草稿');
  await page.locator('[data-view="matrix"]').click();await page.locator('[data-view="encode"]').click();
  assert.equal(await page.locator('#input').inputValue(),'保留工作草稿');
+ assert.equal(await page.locator('[data-example][aria-current="true"]').getAttribute('data-example'),'1');
  await page.evaluate(()=>{window.originalFileText=File.prototype.text;File.prototype.text=function(){return new Promise(resolve=>{window.finishImport=()=>resolve('{"segments":[{"text":"过期输入"}]}');});};});
  await page.locator('#file').setInputFiles({name:'slow.json',mimeType:'application/json',buffer:Buffer.from('{}')});
  await page.waitForFunction(()=>typeof window.finishImport==='function');

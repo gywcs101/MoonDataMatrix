@@ -10,7 +10,7 @@ MoonBit 实现的 **Data Matrix 编解码库**，附原生命令行工具和完�
 
 - 24 种方形、6 种经典矩形及 18 种 DMRE 扩展矩形；默认自动方形，可选择尺寸集合或指定宽高。
 - ASCII、C40、Text、X12、EDIFACT、Base256 六种模式及混合模式规划。
-- 文本固定使用 UTF-8 + ECI 26；字节接口原样编码，不添加 ECI、不转码。
+- `encode_text` 使用 UTF-8 + ECI 26；高级消息与网页文本输入支持选择字符集。`encode_bytes` 原样编码，不添加 ECI、不转码。
 - 空内容允许编码；不裁剪空白、换行或 BOM；文本文件必须是合法 UTF-8。
 - Reed–Solomon 纠错、交织、矩阵布置及多区域定位边全部由 MoonBit 实现。
 - 黑码白底 SVG，默认 2 模块静区、4 倍缩放；浏览器可导出整数像素 PNG。
@@ -132,7 +132,7 @@ moon run cmd/main --target native -- batch --input examples/assets.jsonl --outpu
 
 `payload.bin` 表示用户准备的二进制文件。上述命令应在仓库根目录运行。
 
-单条输入四选一，省略 `--output` 则输出 SVG 到标准输出。可添加 `--shape square|rectangle|any|dmre|all` 或 `--size WIDTHxHEIGHT`，二者互斥。十六进制必须是偶数个有效字符，不自动删除空格。
+单条编码可在四种普通输入（文本、文本文件、二进制文件、十六进制）或高级消息文件 `--message-file` 中选择一项；省略 `--output` 则输出到标准输出，默认格式为 SVG。普通输入可添加 `--shape square|rectangle|any|dmre|all` 或 `--size WIDTHxHEIGHT`，二者互斥；高级消息的尺寸在 JSON 中指定。十六进制必须是偶数个有效字符，不自动删除空格。
 
 诊断只写标准错误，程序自身的退出码如下；通过 `moon run` 等启动器调用时，启动器可能转换退出码。
 
@@ -173,6 +173,8 @@ moon run cmd/main --target native -- assemble --input parts.json
 
 每行必须有 `id`，以及 `text` / `hex` / `message` 中恰好一项；`message` 为上述高级消息对象，选项在对象内指定。普通输入和单符号消息写为 `<id>.svg`；高级消息另附 `<id>.json` 矩阵集合，多符号消息写入 `<id>/part-01.svg` 等和 `<id>/symbols.json`。未知字段报错。`id` 只允许 ASCII 字母、数字、下划线和连字符，长度 1～100；为跨平台一致性，拒绝 Windows 保留设备名及大小写不敏感的重复 ID。空行无效，文件最后一个换行允许存在。
 
+输出目录必须不存在。全部条目成功后才发布最终目录；错误报告包含行号和条目 ID。批次内容会先保存在内存中，适合中小规模批次。
+
 ### 三条完整使用链
 
 ```sh
@@ -191,8 +193,6 @@ moon run cmd/main --target native -- assemble --input exchange.json
 
 DMRE 输出包含 SVG、矩阵与解码结果，可用于设备标签；多字符集消息由接收端逐矩阵解码、按文件标识重组，恢复中文、日文与 Unicode 内容。
 
-输出目录必须不存在。全部条目成功后才发布最终目录；错误报告包含行号和条目 ID。批次内容会先保存在内存中，适合中小规模批次。
-
 ## 浏览器演示
 
 ```sh
@@ -207,7 +207,7 @@ python -m http.server --directory _build/site 8080
 ## 三个可复用场景
 
 1. **资产编号批量生成 SVG**：将资产编号写入 `examples/assets.jsonl`，运行批次命令，得到按安全 ID 命名的独立 SVG。
-2. **中文样本标签**：使用浏览器的“中文样本”示例，预览并下载 SVG 或 PNG；用支持 ECI 的扫描器还原中文。
+2. **中文标签**：使用浏览器的“中文标签”示例，预览并下载 SVG 或 PNG；用支持对应 ECI 的扫描器还原中文。
 3. **二进制设备数据**：通过字节文件或十六进制输入保留零字节和高位字节，独立解码器逐字节比较，无隐式字符集猜测。
 
 ## 兼容性与可靠性
@@ -218,6 +218,6 @@ python -m http.server --directory _build/site 8080
 
 ## 来源与许可证
 
-本项目采用 [MIT 许可证](LICENSE)。编码算法移植自 [datamatrix-rs](https://github.com/jannschu/datamatrix-rs)，固定提交 `af189538aee8f029dd58f317ebd4c006c9837ac2`，采用其 MIT 许可。上游作者版权声明保存在 [LICENSES/datamatrix-rs-MIT.txt](LICENSES/datamatrix-rs-MIT.txt)。
+本项目采用 [MIT 许可证](LICENSE)。编码、尺寸表、矩阵遍历及六模式数据解码参考或移植自 [datamatrix-rs](https://github.com/jannschu/datamatrix-rs)，固定提交 `af189538aee8f029dd58f317ebd4c006c9837ac2`，采用其 MIT 许可；Reed–Solomon 纠错解码为本项目原创实现。上游作者版权声明保存在 [LICENSES/datamatrix-rs-MIT.txt](LICENSES/datamatrix-rs-MIT.txt)。
 
 完整六模式优化器已移植；对同代价候选采用明确的排序平局规则。逐文件映射、差异及工具链说明见 [MIGRATION.md](MIGRATION.md)，第三方与测试数据来源见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
