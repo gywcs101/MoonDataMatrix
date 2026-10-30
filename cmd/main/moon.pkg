@@ -3,7 +3,6 @@ import {
   "gywcs101/MoonDataMatrix" @lib,
   "moonbitlang/core/env",
   "moonbitlang/core/encoding/utf8",
-  "moonbitlang/core/debug",
   "moonbitlang/core/json",
   "moonbitlang/core/string",
   "moonbitlang/x/fs",

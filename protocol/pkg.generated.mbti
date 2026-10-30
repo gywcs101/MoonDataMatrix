@@ -17,6 +17,8 @@ pub fn process(String, String) -> String raise
 
 pub fn symbol_json(@MoonDataMatrix.Symbol) -> Json raise
 
+pub fn user_error(Error) -> String
+
 // Errors
 pub suberror ProtocolError {
   InvalidRequest(String)

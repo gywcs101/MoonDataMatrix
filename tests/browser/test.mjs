@@ -47,7 +47,7 @@ try{
  await page.locator('[data-example="1"]').click();
  assert.equal(await page.locator('#decoded-text').textContent(),'样本编号：LAB-2026-001');
  await page.locator('[data-example="2"]').click();await page.locator('#shape').selectOption('fixed');await page.locator('#size').selectOption('10x10');await page.locator('#generate').click();
- assert.ok((await page.locator('#error').textContent()).includes('CapacityExceeded'));
+ assert.ok((await page.locator('#error').textContent()).includes('容量'));
  for(const example of ['3','4','5','6']) {
   await page.locator(`[data-example="${example}"]`).click();
   assert.equal(await page.locator('#error').textContent(),'');
@@ -97,6 +97,23 @@ try{
  await page.locator('#input').fill('A\x1dB');await page.locator('#generate').click();
  assert.equal(await page.locator('#decoded-text').textContent(),'A\\u001dB');
  assert.deepEqual(JSON.parse(await page.locator('#decoded').textContent()).fnc1_positions,[]);
+ for(const [kind,input,expected] of [
+  ['message','样本编号：LAB-001','文本输入模式'],
+  ['matrix','样本编号：LAB-001','JSON'],
+  ['assemble','{','补全'],
+  ['hex','0xGG','十六进制'],
+  ['message','{"segments":[{"text":"🙂","eci":29}]}','字符集'],
+  ['matrix','{"matrix":[[1]]}','true 或 false'],
+  ['assemble',JSON.stringify({symbols:JSON.parse(symbolSet).symbols.slice(1)}),'完整符号集合'],
+  ['assemble',JSON.stringify({symbols:JSON.parse(symbolSet).symbols.map(()=>JSON.parse(symbolSet).symbols[0])}),'重复分片'],
+ ]) {
+  await page.locator('#kind').selectOption(kind);await page.locator('#input').fill(input);await page.locator('#generate').click();
+  const message=await page.locator('#error').textContent();
+  assert.ok(message.includes(expected),message);
+  assert.ok(!/InvalidChar|InvalidRequest|InvalidOption|CapacityExceeded|TypeError|Error\(/.test(message),message);
+  assert.ok(await page.locator('#json').isDisabled());assert.equal(await page.locator('#preview svg').count(),0);
+ }
+ await page.locator('[data-example="1"]').click();assert.equal(await page.locator('#error').textContent(),'');
  await page.setViewportSize({width:375,height:800});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  assert.deepEqual(errors,[]);console.log('Browser preview, stale-output clearing, errors and SVG/PNG downloads passed');

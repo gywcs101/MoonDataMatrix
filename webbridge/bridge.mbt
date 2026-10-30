@@ -31,7 +31,7 @@ pub fn generate(
     result.stringify()
   } catch {
     e => {
-      let result : Json = { "error": @debug.to_string(e) }
+      let result : Json = { "error": @protocol.user_error(e) }
       result.stringify()
     }
   }
@@ -41,7 +41,7 @@ pub fn generate(
 pub fn process(operation : String, input : String) -> String {
   @protocol.process(operation, input) catch {
     e => {
-      let result : Json = { "error": @debug.to_string(e) }
+      let result : Json = { "error": @protocol.user_error(e) }
       result.stringify()
     }
   }

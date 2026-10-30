@@ -52,7 +52,7 @@ fn svg(
     }
     @lib.render_svg(symbol)
   } catch {
-    e => raise CliError(3, @debug.to_string(e))
+    e => raise CliError(3, @protocol.user_error(e))
   }
 }
 
@@ -181,14 +181,14 @@ fn batch(
       }
       if obj.get("message") is Some(message) {
         let symbols = @protocol.encode_request(message) catch {
-          e => raise CliError(3, @debug.to_string(e))
+          e => raise CliError(3, @protocol.user_error(e))
         }
         if symbols.length() == 1 {
           results.push(
             (
               id + ".svg",
               @lib.render_svg(symbols[0]) catch {
-                e => raise CliError(3, @debug.to_string(e))
+                e => raise CliError(3, @protocol.user_error(e))
               },
             ),
           )
@@ -199,7 +199,7 @@ fn batch(
               (
                 id + "/part-" + (if i < 9 { "0" } else { "" }) + n + ".svg",
                 @lib.render_svg(symbols[i]) catch {
-                  e => raise CliError(3, @debug.to_string(e))
+                  e => raise CliError(3, @protocol.user_error(e))
                 },
               ),
             )
@@ -370,7 +370,7 @@ fn run(args : Array[String]) -> Unit raise CliError {
       }
     } catch {
       CliError(code, message) => raise CliError(code, message)
-      e => raise CliError(3, @debug.to_string(e))
+      e => raise CliError(3, @protocol.user_error(e))
     }
     match values.get("--output") {
       Some(path) => write_single(path, content)
@@ -434,7 +434,7 @@ fn run_protocol(command : String, args : Array[String]) -> Unit raise CliError {
     },
     input,
   ) catch {
-    e => raise CliError(3, @debug.to_string(e))
+    e => raise CliError(3, @protocol.user_error(e))
   }
   match values.get("--output") {
     Some(p) => write_single(p, result)

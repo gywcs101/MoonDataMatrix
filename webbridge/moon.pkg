@@ -1,7 +1,6 @@
 import {
   "gywcs101/MoonDataMatrix/protocol",
   "gywcs101/MoonDataMatrix" @lib,
-  "moonbitlang/core/debug",
 }
 
 supported_targets = "js"

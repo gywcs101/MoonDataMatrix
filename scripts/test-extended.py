@@ -108,4 +108,9 @@ with tempfile.TemporaryDirectory() as td:
  exchange=call(['message','--input',root/'examples/mixed-append.json'])
  f.write_text(exchange,encoding='utf8')
  assert json.loads(call(['assemble','--input',f]))['text']=='设备配置：中文样本，温度传感器，校准信息。日本語の機器設定と検査記録。Unicode：🙂🧪'
+ f.write_text('样本编号',encoding='utf8')
+ invalid=subprocess.run([str(exe),'message','--input',str(f)],capture_output=True,encoding='utf8')
+ assert invalid.returncode==3 and not invalid.stdout
+ assert 'JSON' in invalid.stderr and '文本输入模式' in invalid.stderr
+ assert 'InvalidChar' not in invalid.stderr and '样本编号' not in invalid.stderr
 print('Extended ECI, GS1, Macro, append, strict inputs and external-encoder decoding passed')

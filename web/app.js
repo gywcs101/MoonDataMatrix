@@ -6,6 +6,7 @@ for(const [w,h] of sizes){const o=document.createElement('option');o.value=`${w}
 const charsets=[[26,'UTF-8'],[2,'CP437'],[3,'ISO-8859-1'],...Array.from({length:10},(_,i)=>[i+4,`ISO-8859-${i+2}`]),...[13,14,15,16].map(n=>[n+2,`ISO-8859-${n}`]),[20,'Shift JIS'],[21,'Windows-1250'],[22,'Windows-1251'],[23,'Windows-1252'],[24,'Windows-1256'],[25,'UTF-16 BE'],[27,'ASCII'],[28,'Big5'],[29,'GB2312'],[30,'EUC-KR'],[31,'GBK'],[32,'GB18030'],[33,'UTF-16 LE'],[34,'UTF-32 BE'],[35,'UTF-32 LE']];
 for(const [value,label] of charsets){const o=document.createElement('option');o.value=value;o.textContent=label;$('eci').append(o);}
 let current=null,collection=null;
+class InputError extends Error {}
 const hint=document.createElement('p');hint.id='input-hint';$('input').before(hint);
 const basis=document.createElement('p');basis.id='text-basis';$('decoded-text').before(basis);
 const raw=document.createElement('p');raw.id='decoded-hex';raw.style.overflowWrap='anywhere';$('decoded-text').after(raw);
@@ -30,7 +31,7 @@ function render(){
  try{
   const [width,height]=$('size').value.split('x').map(Number),shape=$('shape').value,kind=$('kind').value,input=$('input').value;
   let result;
-  if(kind==='text'||kind==='hex') {const symbol=JSON.parse(generate(input,kind==='hex',shape,width,height));if(symbol.error)throw new Error(symbol.error);result={symbols:[symbol]};}
+  if(kind==='text'||kind==='hex') {const symbol=JSON.parse(generate(input,kind==='hex',shape,width,height));if(symbol.error)throw new InputError(symbol.error);result={symbols:[symbol]};}
   else if(kind==='message'||kind==='matrix'||kind==='assemble') result=JSON.parse(process(kind==='message'?'encode':kind==='matrix'?'decode':'assemble',input));
   else {
    let request={shape,width,height};
@@ -39,11 +40,11 @@ function render(){
    else request.segments=[{text:input,eci:Number($('eci').value)}];
    result=JSON.parse(process('encode',JSON.stringify(request)));
   }
-  if(result.error)throw new Error(result.error);
+  if(result.error)throw new InputError(result.error);
   collection=result;$('json').disabled=false;
   if(result.symbols){result.symbols.forEach((_,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`符号 ${i+1}`;$('symbol').append(o);});$('symbol').disabled=result.symbols.length<2;showSymbol(0);if(result.symbols.length>1){total.hidden=false;const assembled=JSON.parse(process('assemble',JSON.stringify({symbols:result.symbols.map(({matrix})=>({matrix}))})));if(assembled.error)$('assembled-error').textContent='重组失败：'+assembled.error;else $('assembled-text').textContent=displayText(assembled);}}
   else {$('preview').style.display='none';showDecoded(result);$('meta').textContent='解码完成';$('json').textContent='下载解码结果';}
- }catch(e){$('error').textContent=e.message;}
+ }catch(e){invalidate();$('error').textContent=e instanceof InputError?e.message:'处理失败，请检查输入并重试；若仍失败，请记录输入类型和所选选项后反馈。';}
 }
 $('symbol').onchange=()=>showSymbol(Number($('symbol').value));
 $('json').onclick=()=>{if(collection)download(new Blob([JSON.stringify(collection.symbols?{symbols:collection.symbols.map(({width,height,matrix})=>({width,height,matrix}))}:collection)],{type:'application/json'}),'moondatamatrix.json');};
