@@ -6,14 +6,23 @@ for(const [w,h] of sizes){const o=document.createElement('option');o.value=`${w}
 const charsets=[[26,'UTF-8'],[2,'CP437'],[3,'ISO-8859-1'],...Array.from({length:10},(_,i)=>[i+4,`ISO-8859-${i+2}`]),...[13,14,15,16].map(n=>[n+2,`ISO-8859-${n}`]),[20,'Shift JIS'],[21,'Windows-1250'],[22,'Windows-1251'],[23,'Windows-1252'],[24,'Windows-1256'],[25,'UTF-16 BE'],[27,'ASCII'],[28,'Big5'],[29,'GB2312'],[30,'EUC-KR'],[31,'GBK'],[32,'GB18030'],[33,'UTF-16 LE'],[34,'UTF-32 BE'],[35,'UTF-32 LE']];
 for(const [value,label] of charsets){const o=document.createElement('option');o.value=value;o.textContent=label;$('eci').append(o);}
 let current=null,collection=null;
-function invalidate(){current=null;collection=null;$('preview').replaceChildren();$('symbol').replaceChildren();$('symbol').disabled=true;$('decoded').textContent='';$('decoded-text').textContent='';$('preview').style.display='grid';$('json').textContent='下载矩阵 JSON';$('meta').textContent='';$('svg').disabled=$('png').disabled=$('json').disabled=true;}
+const hint=document.createElement('p');hint.id='input-hint';$('input').before(hint);
+const basis=document.createElement('p');basis.id='text-basis';$('decoded-text').before(basis);
+const raw=document.createElement('p');raw.id='decoded-hex';raw.style.overflowWrap='anywhere';$('decoded-text').after(raw);
+const total=document.createElement('section');total.id='assembled';total.hidden=true;total.innerHTML='<h3>完整重组内容</h3><p id="assembled-text" style="white-space:pre-wrap;overflow-wrap:anywhere"></p><p id="assembled-error" role="alert"></p>';$('decoded').closest('details').after(total);
+function updateOptions(){const k=$('kind').value;$('eci').disabled=k!=='eci';$('size').disabled=$('shape').value!=='fixed';hint.textContent=k==='gs1'?'GS1 使用 ISO-8859-1；输入 ␝ 表示 FNC1 字段分隔符。':k==='text'||k==='split'?'文本使用 UTF-8（ECI 26）。':k==='eci'?'文本使用所选字符集。':'';}
+function invalidate(){current=null;collection=null;$('preview').replaceChildren();$('symbol').replaceChildren();$('symbol').disabled=true;$('decoded').textContent='';$('decoded-text').textContent='';basis.textContent='';raw.textContent='';total.hidden=true;$('assembled-text').textContent='';$('assembled-error').textContent='';$('preview').style.display='grid';$('json').textContent='下载矩阵 JSON';$('meta').textContent='';$('svg').disabled=$('png').disabled=$('json').disabled=true;}
+function displayText(decoded){if(decoded.text==null)return '无法转换为文本，请查看原始字节。';let pos=0;return Array.from(decoded.text,c=>{const at=pos;pos+=decoded.gs1?1:new TextEncoder().encode(c).length;if(c==='\x1d'&&decoded.gs1&&decoded.fnc1_positions.includes(at))return '␝';return /[\x00-\x08\x0b-\x1f\x7f-\x9f]/.test(c)?'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'):c;}).join('');}
 function showDecoded(decoded){
+ $('decoded-text').previousElementSibling.previousElementSibling.textContent=collection?.symbols?.length>1?'当前符号内容':'还原内容';
  $('decoded').textContent=JSON.stringify(decoded,null,2);
- const binary=$('kind').value==='hex'||(!decoded.gs1&&!decoded.macro&&(!decoded.eci?.length||/[\x00-\x08\x0b-\x1f\x7f-\x9f]/.test(decoded.text??'')));
+ const binary=$('kind').value==='hex';
  const hex=decoded.hex.match(/.{1,2}/g)?.join(' ').toUpperCase()||'（空）';
  $('decoded-text').textContent=binary||decoded.text==null
   ? `十六进制（${decoded.hex.length/2} 字节）：\n${hex}`
-  : decoded.text.replace(/[\x00-\x08\x0b-\x1f\x7f-\x9f]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));
+  : displayText(decoded);
+ raw.textContent=`原始字节（十六进制）：${hex}`;
+ basis.textContent=decoded.eci?.length?'文本按照符号中的 ECI 字符集解读。': '无 ECI：文本按 ISO-8859-1 解读；原始字节见下方。';
 }
 function showSymbol(index){current=collection.symbols[index];$('preview').innerHTML=current.svg;$('meta').textContent=`${current.width} × ${current.height} 模块 · 第 ${index+1} / ${collection.symbols.length} 个符号`;showDecoded(current.decoded);$('svg').disabled=$('png').disabled=false;}
 function render(){
@@ -26,13 +35,13 @@ function render(){
   else {
    let request={shape,width,height};
    if(kind==='split')Object.assign(request,{split:true,text:input,file_id1:1,file_id2:1});
-   else if(kind==='gs1')Object.assign(request,{gs1:true,segments:input.split(String.fromCharCode(29)).flatMap((text,i)=>i?[{fnc1:true},{text,eci:3}]:[{text,eci:3}])});
+   else if(kind==='gs1')Object.assign(request,{gs1:true,segments:input.split(/[␝\x1d]/).flatMap((text,i)=>i?[{fnc1:true},{text,eci:3}]:[{text,eci:3}])});
    else request.segments=[{text:input,eci:Number($('eci').value)}];
    result=JSON.parse(process('encode',JSON.stringify(request)));
   }
   if(result.error)throw new Error(result.error);
   collection=result;$('json').disabled=false;
-  if(result.symbols){result.symbols.forEach((_,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`符号 ${i+1}`;$('symbol').append(o);});$('symbol').disabled=result.symbols.length<2;showSymbol(0);}
+  if(result.symbols){result.symbols.forEach((_,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`符号 ${i+1}`;$('symbol').append(o);});$('symbol').disabled=result.symbols.length<2;showSymbol(0);if(result.symbols.length>1){total.hidden=false;const assembled=JSON.parse(process('assemble',JSON.stringify({symbols:result.symbols.map(({matrix})=>({matrix}))})));if(assembled.error)$('assembled-error').textContent='重组失败：'+assembled.error;else $('assembled-text').textContent=displayText(assembled);}}
   else {$('preview').style.display='none';showDecoded(result);$('meta').textContent='解码完成';$('json').textContent='下载解码结果';}
  }catch(e){$('error').textContent=e.message;}
 }
@@ -40,7 +49,7 @@ $('symbol').onchange=()=>showSymbol(Number($('symbol').value));
 $('json').onclick=()=>{if(collection)download(new Blob([JSON.stringify(collection.symbols?{symbols:collection.symbols.map(({width,height,matrix})=>({width,height,matrix}))}:collection)],{type:'application/json'}),'moondatamatrix.json');};
 function download(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 $('generate').onclick=render;
-for(const id of ['input','kind','shape','size','eci'])$(id).addEventListener('input',()=>{invalidate();$('error').textContent='';$('size').disabled=$('shape').value!=='fixed';});
+for(const id of ['input','kind','shape','size','eci'])$(id).addEventListener('input',()=>{invalidate();$('error').textContent='';updateOptions();});
 $('svg').onclick=()=>{if(current)download(new Blob([current.svg],{type:'image/svg+xml'}),'datamatrix.svg');};
 $('png').onclick=()=>{
  if(!current)return;
@@ -51,11 +60,12 @@ $('png').onclick=()=>{
  canvas.toBlob(blob=>{if(blob)download(blob,'datamatrix.png');},'image/png');
 };
 const examples=[
- ['text','ASSET-2026-0001','square'],['text','样本编号：LAB-2026-001 🧪','square'],['hex','00010203fffe807f','square'],
- ['gs1','010123456789012810BATCH'+String.fromCharCode(29)+'21SERIAL','square'],
+ ['text','ASSET-2026-0001','square'],['text','样本编号：LAB-2026-001','square'],['hex','00010203fffe807f','square'],
+ ['gs1','010123456789012810BATCH␝21SERIAL','square'],
  ['text','DEVICE-2026-001','dmre'],
  ['message',JSON.stringify({segments:[{text:'中文',eci:29},{text:'日本語',eci:20},{text:'🙂',eci:32}]},null,2),'square'],
  ['split','设备配置：中文🙂'.repeat(12),'fixed']
 ];
-for(const b of document.querySelectorAll('[data-example]'))b.onclick=()=>{const [kind,input,shape]=examples[Number(b.dataset.example)];$('kind').value=kind;$('input').value=input;$('shape').value=shape;if(kind==='split')$('size').value='26x26';$('size').disabled=shape!=='fixed';render();};
+for(const b of document.querySelectorAll('[data-example]'))b.onclick=()=>{const [kind,input,shape]=examples[Number(b.dataset.example)];$('kind').value=kind;$('input').value=input;$('shape').value=shape;if(kind==='split')$('size').value='26x26';updateOptions();render();};
+updateOptions();
 render();

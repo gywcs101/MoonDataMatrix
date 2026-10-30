@@ -42,18 +42,32 @@ try{
   await page.locator('#kind').selectOption(kind);
   await page.locator('#input').fill(JSON.stringify(kind==='matrix'?binarySet.symbols[0]:binarySet));
   await page.locator('#generate').click();
-  assert.equal(await page.locator('#decoded-text').textContent(),binaryDisplay);
+  assert.ok((await page.locator('#decoded-hex').textContent()).includes('00 01 02 03 FF FE 80 7F'));
  }
  await page.locator('[data-example="1"]').click();
- assert.equal(await page.locator('#decoded-text').textContent(),'样本编号：LAB-2026-001 🧪');
+ assert.equal(await page.locator('#decoded-text').textContent(),'样本编号：LAB-2026-001');
  await page.locator('[data-example="2"]').click();await page.locator('#shape').selectOption('fixed');await page.locator('#size').selectOption('10x10');await page.locator('#generate').click();
  assert.ok((await page.locator('#error').textContent()).includes('CapacityExceeded'));
  for(const example of ['3','4','5','6']) {
   await page.locator(`[data-example="${example}"]`).click();
   assert.equal(await page.locator('#error').textContent(),'');
   assert.ok(await page.locator('#decoded').textContent());
+  if(example==='3') {
+   assert.ok(await page.locator('#eci').isDisabled());
+   assert.ok((await page.locator('#input').inputValue()).includes('␝'));
+   assert.ok((await page.locator('#decoded-text').textContent()).includes('BATCH␝21SERIAL'));
+   const gs=JSON.parse(await page.locator('#decoded').textContent());
+   assert.equal(gs.gs1,true);assert.equal(gs.fnc1_positions.length,1);
+   assert.equal(gs.hex.slice(gs.fnc1_positions[0]*2,gs.fnc1_positions[0]*2+2),'1d');
+   await page.locator('#input').fill((await page.locator('#input').inputValue()).replace('␝','\x1d'));
+   await page.locator('#generate').click();
+   assert.equal(JSON.parse(await page.locator('#decoded').textContent()).hex,gs.hex);
+  }
  }
  assert.ok(await page.locator('#symbol option').count()>1);
+ assert.equal(await page.locator('#assembled-text').textContent(),'设备配置：中文🙂'.repeat(12));
+ await page.locator('#symbol').selectOption('1');
+ assert.equal(await page.locator('#assembled-text').textContent(),'设备配置：中文🙂'.repeat(12));
  const pendingJson=page.waitForEvent('download');await page.locator('#json').click();
  const jsonDownload=await pendingJson;await jsonDownload.saveAs(resolve(output,'symbols.json'));
  const symbolSet=await readFile(resolve(output,'symbols.json'),'utf8');
@@ -63,5 +77,8 @@ try{
  await page.locator('#kind').selectOption('matrix');await page.locator('#input').fill(JSON.stringify(JSON.parse(symbolSet).symbols[0]));await page.locator('#generate').click();
  assert.equal(await page.locator('#error').textContent(),'');
  await page.screenshot({path:resolve(output,'extended-demo.png'),fullPage:true});
+ await page.locator('#kind').selectOption('eci');assert.ok(await page.locator('#eci').isEnabled());
+ await page.setViewportSize({width:375,height:800});
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  assert.deepEqual(errors,[]);console.log('Browser preview, stale-output clearing, errors and SVG/PNG downloads passed');
 }finally{await browser.close();server.close();}
