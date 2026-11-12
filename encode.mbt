@@ -1,7 +1,7 @@
 // ASCII and padding rules adapted from datamatrix-rs encodation (MIT).
 
 ///|
-fn ascii_codewords(data : Bytes) -> Array[Int] {
+fn ascii_codewords(data : Bytes) -> Array[Int32] {
   let out = []
   let mut i = 0
   while i < data.length() {
@@ -28,7 +28,7 @@ fn ascii_codewords(data : Bytes) -> Array[Int] {
 
 ///|
 fn pad_data(
-  codewords : Array[Int],
+  codewords : Array[Int32],
   options : EncodeOptions,
 ) -> Size raise EncodeError {
   let s = select_size(codewords.length(), options)
@@ -44,7 +44,7 @@ fn pad_data(
 
 ///|
 fn finish(
-  codewords : Array[Int],
+  codewords : Array[Int32],
   options : EncodeOptions,
 ) -> Symbol raise EncodeError {
   let s = pad_data(codewords, options)
@@ -59,7 +59,7 @@ fn finish(
 /// Encode raw bytes without ECI or any transformation.
 pub fn encode_bytes(
   data : Bytes,
-  options? : EncodeOptions = { shape: Square, },
+  options~ : EncodeOptions = { shape: Square, },
 ) -> Symbol raise EncodeError {
   if data.length() > 3116 {
     raise CapacityExceeded
@@ -71,7 +71,7 @@ pub fn encode_bytes(
 /// Encode UTF-8 text with ECI 26, preserving all whitespace and zero bytes.
 pub fn encode_text(
   text : String,
-  options? : EncodeOptions = { shape: Square, },
+  options~ : EncodeOptions = { shape: Square, },
 ) -> Symbol raise EncodeError {
   let data = @utf8.encode(text)
   if data.length() > 3116 {

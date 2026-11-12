@@ -1,7 +1,7 @@
 // GF(256) decoding: Berlekamp–Massey locator and syndrome linear solve.
 
 ///|
-fn gf_pow(a : Int, n : Int) -> Int {
+fn gf_pow(a : Int32, n : Int32) -> Int32 {
   let mut out = 1
   for _ in 0..<n {
     out = gf_mul(out, a)
@@ -10,12 +10,12 @@ fn gf_pow(a : Int, n : Int) -> Int {
 }
 
 ///|
-fn gf_div(a : Int, b : Int) -> Int {
+fn gf_div(a : Int32, b : Int32) -> Int32 {
   gf_mul(a, gf_pow(b, 254))
 }
 
 ///|
-fn syndromes(data : Array[Int], count : Int) -> Array[Int] {
+fn syndromes(data : Array[Int32], count : Int32) -> Array[Int32] {
   Array::makei(count, fn(i) {
     let x = gf_pow(2, i + 1)
     let mut y = 0
@@ -27,7 +27,7 @@ fn syndromes(data : Array[Int], count : Int) -> Array[Int] {
 }
 
 ///|
-fn correct_block(data : Array[Int], ecc : Int) -> Int raise DecodeError {
+fn correct_block(data : Array[Int32], ecc : Int32) -> Int32 raise DecodeError {
   let syn = syndromes(data, ecc)
   if syn.iter().all(fn(v) { v == 0 }) {
     return 0
@@ -122,7 +122,10 @@ fn correct_block(data : Array[Int], ecc : Int) -> Int raise DecodeError {
 }
 
 ///|
-fn correct_codewords(words : Array[Int], size : Size) -> Int raise DecodeError {
+fn correct_codewords(
+  words : Array[Int32],
+  size : Size,
+) -> Int32 raise DecodeError {
   let mut corrected = 0
   for block in 0..<size.blocks {
     let indices = []

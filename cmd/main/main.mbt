@@ -1,6 +1,6 @@
 ///|
 #borrow(a, b)
-extern "C" fn publish(a : Bytes, b : Bytes) -> Int = "mdm_publish"
+extern "C" fn publish(a : Bytes, b : Bytes) -> Int32 = "mdm_publish"
 
 ///|
 #borrow(bytes)
@@ -13,11 +13,11 @@ fn c_string(s : String) -> Bytes {
 
 ///|
 suberror CliError {
-  CliError(Int, String)
+  CliError(Int32, String)
 }
 
 ///|
-fn fail(code : Int, message : String) -> Unit raise CliError {
+fn fail(code : Int32, message : String) -> Unit raise CliError {
   raise CliError(code, message)
 }
 

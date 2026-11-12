@@ -41,7 +41,7 @@ for pointer in range(126*10*126*10):
         start=pointer; startcp=cp
     lastp=pointer; lastcp=cp
 if start is not None: ranges.append((start,startcp,lastp-start+1))
-(root/'charset/gb_ranges.mbt').write_text('// CPython GB18030 mapping ranges; PSF license.\n///|\nlet gb_ranges : Array[(Int,Int,Int)] = '+str(ranges)+'\n')
-(root/'charset/tables.mbt').write_text('///|\nfn tables(eci : Int) -> (Bytes, Bytes) raise CharsetError {\n match eci {\n'+''.join(f' {e} => (decode_{e}, encode_{e})\n' for e in codecs)+' _ => raise UnsupportedEci(eci)\n }\n}\n')
+(root/'charset/gb_ranges.mbt').write_text('// CPython GB18030 mapping ranges; PSF license.\n///|\nlet gb_ranges : Array[(Int32,Int32,Int32)] = '+str(ranges)+'\n')
+(root/'charset/tables.mbt').write_text('///|\nfn tables(eci : Int32) -> (Bytes, Bytes) raise CharsetError {\n match eci {\n'+''.join(f' {e} => (decode_{e}, encode_{e})\n' for e in codecs)+' _ => raise UnsupportedEci(eci)\n }\n}\n')
 (root/'charset/SOURCES.json').write_text(json.dumps({'generator':'scripts/generate-charsets.py','python':sys.version,'source':'https://github.com/python/cpython/tree/v3.13.5','license':'PSF-2.0 and included historical notices','codecs':codecs},indent=2)+'\n')
 print('Generated',len(codecs),'ECI maps and',len(ranges),'GB18030 ranges')

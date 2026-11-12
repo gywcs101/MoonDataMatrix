@@ -6,16 +6,17 @@ import {
 }
 
 // Values
-pub fn decode(Bytes, Int) -> String raise CharsetError
+pub fn decode(Bytes, Int32) -> String raise CharsetError
 
-pub fn encode(String, Int) -> Bytes raise CharsetError
+pub fn encode(String, Int32) -> Bytes raise CharsetError
 
 // Errors
+#derive(@debug.Debug)
 pub suberror CharsetError {
-  UnsupportedEci(Int)
+  UnsupportedEci(Int32)
   InvalidSequence
-  Unrepresentable(Int)
-} derive(@debug.Debug)
+  Unrepresentable(Int32)
+}
 pub fn CharsetError::to_repr(Self) -> @debug.Repr
 
 // Types and methods

@@ -4,30 +4,30 @@
 
 ///|
 priv struct Plan {
-  mode : Int
+  mode : Int32
   data : Bytes
   options : EncodeOptions
-  mut pos : Int
-  mut written : Int
-  mut cost : Int
-  extra : Int
-  mut values : Int
-  mut ahead : Int
-  mut last : Int
-  mut tail : Int
+  mut pos : Int32
+  mut written : Int32
+  mut cost : Int32
+  extra : Int32
+  mut values : Int32
+  mut ahead : Int32
+  mut last : Int32
+  mut tail : Int32
   mut two_digits : Bool
-  switches : Array[(Int, Int)]
+  switches : Array[(Int32, Int32)]
 }
 
 ///|
 fn new_plan(
-  mode : Int,
+  mode : Int32,
   data : Bytes,
   options : EncodeOptions,
-  pos : Int,
-  written : Int,
-  extra : Int,
-  switches : Array[(Int, Int)],
+  pos : Int32,
+  written : Int32,
+  extra : Int32,
+  switches : Array[(Int32, Int32)],
 ) -> Plan {
   {
     mode,
@@ -56,19 +56,19 @@ fn Plan::copy(self : Plan) -> Plan {
 }
 
 ///|
-fn space_left(written : Int, options : EncodeOptions) -> Int? {
+fn space_left(written : Int32, options : EncodeOptions) -> Int32? {
   Some(select_size(written, options).capacity - written) catch {
     _ => None
   }
 }
 
 ///|
-fn Plan::space(self : Plan, extra : Int) -> Int? {
+fn Plan::space(self : Plan, extra : Int32) -> Int32? {
   space_left(self.written + extra, self.options)
 }
 
 ///|
-fn ceil_cost(cost : Int) -> Int {
+fn ceil_cost(cost : Int32) -> Int32 {
   (cost + 11) / 12 * 12
 }
 
@@ -78,12 +78,12 @@ fn digit(c : Byte) -> Bool {
 }
 
 ///|
-fn ascii_size(data : Bytes, start : Int) -> Int {
+fn ascii_size(data : Bytes, start : Int32) -> Int32 {
   ascii_codewords(data[start:].to_owned()).length()
 }
 
 ///|
-fn Plan::switch_cost(self : Plan) -> Int? {
+fn Plan::switch_cost(self : Plan) -> Int32? {
   let cost = self.cost + self.extra
   match self.mode {
     0 => Some(ceil_cost(cost))
@@ -95,7 +95,7 @@ fn Plan::switch_cost(self : Plan) -> Int? {
 }
 
 ///|
-fn Plan::total_cost(self : Plan) -> Int {
+fn Plan::total_cost(self : Plan) -> Int32 {
   let cost = self.cost + self.extra
   let end = self.pos == self.data.length()
   match self.mode {
@@ -177,7 +177,7 @@ fn Plan::total_cost(self : Plan) -> Int {
 }
 
 ///|
-fn Plan::unlatch_written(self : Plan) -> Int {
+fn Plan::unlatch_written(self : Plan) -> Int32 {
   self.written +
   (match self.mode {
     0 => 0
@@ -196,7 +196,7 @@ fn base_set(c : Byte, text : Bool) -> Bool {
 }
 
 ///|
-fn unbeatable_strike(data : Bytes, pos : Int, text : Bool) -> Int {
+fn unbeatable_strike(data : Bytes, pos : Int32, text : Bool) -> Int32 {
   let mut count = 0
   let mut digits = 0
   for i in pos..<data.length() {
@@ -383,7 +383,7 @@ fn Plan::step(self : Plan) -> (Bool, Bool)? {
 fn Plan::add_switches(
   self : Plan,
   list : Array[Plan],
-  remaining : Int,
+  remaining : Int32,
   as_start : Bool,
 ) -> Unit {
   let cost = match self.switch_cost() {
@@ -485,9 +485,9 @@ fn prune_plans(list : Array[Plan]) -> Array[Plan] {
 ///|
 fn optimize(
   data : Bytes,
-  written : Int,
+  written : Int32,
   options : EncodeOptions,
-) -> Array[(Int, Int)] raise EncodeError {
+) -> Array[(Int32, Int32)] raise EncodeError {
   let mut plans = [
     new_plan(0, data, options, 0, written, 0, [(data.length(), 0)]),
   ]
@@ -515,7 +515,7 @@ fn optimize(
       raise CapacityExceeded
     }
     if at_end {
-      fn key(p : Plan) -> (Int, Int, Int) {
+      fn key(p : Plan) -> (Int32, Int32, Int32) {
         let mut max_mode = 0
         for (_, mode) in p.switches {
           if mode > max_mode {
@@ -542,7 +542,7 @@ fn optimize(
 }
 
 ///|
-fn plan_sort_key(p : Plan) -> (Int, Int, Int) {
+fn plan_sort_key(p : Plan) -> (Int32, Int32, Int32) {
   let mut mode = 0
   for (_, m) in p.switches {
     if m > mode {

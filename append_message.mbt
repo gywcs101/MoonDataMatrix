@@ -21,9 +21,9 @@ fn append_segment(out : Array[MessageSegment], item : MessageSegment) -> Unit {
 /// Split a segmented message, preserving text character boundaries and ECI state.
 pub fn encode_append_message(
   segments : Array[MessageSegment],
-  file_id1 : Int,
-  file_id2 : Int,
-  options? : MessageOptions = MessageOptions::new(),
+  file_id1 : Int32,
+  file_id2 : Int32,
+  options~ : MessageOptions = MessageOptions::new(),
 ) -> Array[Symbol] raise EncodeError {
   if options.append is Some(_) ||
     !valid_append({ index: 1, count: 2, file_id1, file_id2, }) {
@@ -39,7 +39,7 @@ pub fn encode_append_message(
   if options.macro_kind != 0 || options.reader_programming {
     raise InvalidOption("control message must fit one symbol")
   }
-  let atoms : Array[(MessageSegment, Int)] = []
+  let atoms : Array[(MessageSegment, Int32)] = []
   let mut active = 3
   for s in segments {
     match s {

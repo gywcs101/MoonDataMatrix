@@ -1,7 +1,7 @@
 // Adapted from datamatrix-rs errorcode/mod.rs and galois.rs (MIT).
 
 ///|
-fn gf_mul(a : Int, b : Int) -> Int {
+fn gf_mul(a : Int32, b : Int32) -> Int32 {
   let mut x = a
   let mut y = b
   let mut r = 0
@@ -19,7 +19,7 @@ fn gf_mul(a : Int, b : Int) -> Int {
 }
 
 ///|
-fn generator(n : Int) -> Array[Int] {
+fn generator(n : Int32) -> Array[Int32] {
   let mut g = [1]
   let mut root = 1
   for _ in 0..<n {
@@ -35,7 +35,7 @@ fn generator(n : Int) -> Array[Int] {
 }
 
 ///|
-fn error_code(data : Array[Int], s : Size) -> Array[Int] {
+fn error_code(data : Array[Int32], s : Size) -> Array[Int32] {
   let g = generator(s.ecc)
   let result = Array::make(s.blocks * s.ecc, 0)
   for block in 0..<s.blocks {

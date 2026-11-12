@@ -1,7 +1,7 @@
 // CPython GB18030 mapping ranges; PSF license.
 
 ///|
-let gb_ranges : Array[(Int, Int, Int)] = [
+let gb_ranges : Array[(Int32, Int32, Int32)] = [
   (0, 128, 36),
   (36, 165, 2),
   (38, 169, 7),

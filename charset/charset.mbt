@@ -1,15 +1,16 @@
 ///|
+#derive(@debug.Debug)
 pub suberror CharsetError {
-  UnsupportedEci(Int)
+  UnsupportedEci(Int32)
   InvalidSequence
-  Unrepresentable(Int)
-} derive(@debug.Debug)
+  Unrepresentable(Int32)
+}
 
 ///|
 pub extend CharsetError with @debug.Debug::{to_repr}
 
 ///|
-fn integer(data : Bytes, pos : Int, n : Int) -> Int {
+fn integer(data : Bytes, pos : Int32, n : Int32) -> Int32 {
   let mut out = 0
   for i in 0..<n {
     out = (out << 8) | data[pos + i].to_int()
@@ -18,7 +19,7 @@ fn integer(data : Bytes, pos : Int, n : Int) -> Int {
 }
 
 ///|
-fn lookup(table : Bytes, key : Int, key_bytes : Int) -> Int? {
+fn lookup(table : Bytes, key : Int32, key_bytes : Int32) -> Int32? {
   let mut lo = 0
   let mut hi = table.length() / 5
   while lo < hi {
@@ -38,7 +39,7 @@ fn lookup(table : Bytes, key : Int, key_bytes : Int) -> Int? {
 }
 
 ///|
-fn emit(out : Array[Byte], value : Int, n : Int, little : Bool) -> Unit {
+fn emit(out : Array[Byte], value : Int32, n : Int32, little : Bool) -> Unit {
   for i in 0..<n {
     out.push(
       ((value >> (8 * (if little { i } else { n - 1 - i }))) & 255).to_byte(),
@@ -47,7 +48,7 @@ fn emit(out : Array[Byte], value : Int, n : Int, little : Bool) -> Unit {
 }
 
 ///|
-pub fn encode(text : String, eci : Int) -> Bytes raise CharsetError {
+pub fn encode(text : String, eci : Int32) -> Bytes raise CharsetError {
   if eci == 26 {
     return @utf8.encode(text)
   }
@@ -97,7 +98,7 @@ pub fn encode(text : String, eci : Int) -> Bytes raise CharsetError {
 }
 
 ///|
-pub fn decode(data : Bytes, eci : Int) -> String raise CharsetError {
+pub fn decode(data : Bytes, eci : Int32) -> String raise CharsetError {
   if eci == 26 {
     return @utf8.decode(data, ignore_bom=false) catch {
       _ => raise InvalidSequence

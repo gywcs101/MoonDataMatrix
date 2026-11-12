@@ -2,13 +2,13 @@
 
 ///|
 priv struct Size {
-  width : Int
-  height : Int
-  capacity : Int
-  blocks : Int
-  ecc : Int
-  regions_x : Int
-  regions_y : Int
+  width : Int32
+  height : Int32
+  capacity : Int32
+  blocks : Int32
+  ecc : Int32
+  regions_x : Int32
+  regions_y : Int32
 }
 
 ///|
@@ -452,7 +452,10 @@ let dmre_sizes : Array[Size] = [
 ]
 
 ///|
-fn select_size(needed : Int, options : EncodeOptions) -> Size raise EncodeError {
+fn select_size(
+  needed : Int32,
+  options : EncodeOptions,
+) -> Size raise EncodeError {
   if needed < 0 {
     raise CapacityExceeded
   }

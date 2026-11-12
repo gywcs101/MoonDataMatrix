@@ -10,13 +10,13 @@ pub fn assemble(Array[DecodedMessage]) -> DecodedMessage raise DecodeError
 
 pub fn decode_matrix(Array[Array[Bool]]) -> DecodedMessage raise DecodeError
 
-pub fn dimensions_for_codewords(Int, options? : EncodeOptions) -> (Int, Int) raise EncodeError
+pub fn dimensions_for_codewords(Int32, options? : EncodeOptions) -> (Int32, Int32) raise EncodeError
 
-pub fn encode_append_bytes(Bytes, Int, Int, options? : EncodeOptions, eci? : Int?) -> Array[Symbol] raise EncodeError
+pub fn encode_append_bytes(Bytes, Int32, Int32, options? : EncodeOptions, eci? : Int32?) -> Array[Symbol] raise EncodeError
 
-pub fn encode_append_message(Array[MessageSegment], Int, Int, options? : MessageOptions) -> Array[Symbol] raise EncodeError
+pub fn encode_append_message(Array[MessageSegment], Int32, Int32, options? : MessageOptions) -> Array[Symbol] raise EncodeError
 
-pub fn encode_append_text(String, Int, Int, options? : EncodeOptions) -> Array[Symbol] raise EncodeError
+pub fn encode_append_text(String, Int32, Int32, options? : EncodeOptions) -> Array[Symbol] raise EncodeError
 
 pub fn encode_bytes(Bytes, options? : EncodeOptions) -> Symbol raise EncodeError
 
@@ -30,88 +30,93 @@ pub fn encode_text(String, options? : EncodeOptions) -> Symbol raise EncodeError
 
 pub fn parse_hex(String) -> Bytes raise EncodeError
 
-pub fn render_svg(Symbol, scale? : Int, quiet_zone? : Int) -> String raise EncodeError
+pub fn render_svg(Symbol, scale? : Int32, quiet_zone? : Int32) -> String raise EncodeError
 
 // Errors
+#derive(@debug.Debug)
 pub suberror DecodeError {
   InvalidMatrix(String)
   UnsupportedMatrixSize
   CorrectionFailed
   InvalidCodeword(String)
   InvalidText
-} derive(@debug.Debug)
+}
 pub fn DecodeError::to_repr(Self) -> @debug.Repr
 
+#derive(@debug.Debug)
 pub suberror EncodeError {
   UnsupportedSize
   CapacityExceeded
   InvalidOption(String)
-} derive(@debug.Debug)
+}
 pub fn EncodeError::to_repr(Self) -> @debug.Repr
 
 // Types and methods
+#derive(Eq)
 pub(all) struct AppendHeader {
-  index : Int
-  count : Int
-  file_id1 : Int
-  file_id2 : Int
-} derive(Eq)
+  index : Int32
+  count : Int32
+  file_id1 : Int32
+  file_id2 : Int32
+}
 pub fn AppendHeader::equal(Self, Self) -> Bool
 pub fn AppendHeader::not_equal(Self, Self) -> Bool
 
 pub struct DecodedMessage {
   gs1 : Bool
-  macro_kind : Int
+  macro_kind : Int32
   reader_programming : Bool
   append : AppendHeader?
-  corrected_codewords : Int
+  corrected_codewords : Int32
   // private fields
 }
 pub fn DecodedMessage::bytes(Self) -> Bytes
-pub fn DecodedMessage::eci_changes(Self) -> Array[(Int, Int)]
-pub fn DecodedMessage::fnc1_positions(Self) -> Array[Int]
+pub fn DecodedMessage::eci_changes(Self) -> Array[(Int32, Int32)]
+pub fn DecodedMessage::fnc1_positions(Self) -> Array[Int32]
 pub fn DecodedMessage::text(Self) -> String raise DecodeError
 
+#derive(Eq)
 pub(all) struct EncodeOptions {
   shape : Shape
-} derive(Eq)
+}
 pub fn EncodeOptions::equal(Self, Self) -> Bool
 pub fn EncodeOptions::not_equal(Self, Self) -> Bool
 
 pub(all) struct MessageOptions {
   symbol : EncodeOptions
   gs1 : Bool
-  macro_kind : Int
+  macro_kind : Int32
   reader_programming : Bool
   append : AppendHeader?
 }
-pub fn MessageOptions::new(symbol? : EncodeOptions, gs1? : Bool, macro_kind? : Int, reader_programming? : Bool, append? : AppendHeader?) -> Self
+pub fn MessageOptions::new(symbol? : EncodeOptions, gs1? : Bool, macro_kind? : Int32, reader_programming? : Bool, append? : AppendHeader?) -> Self
 
 pub(all) enum MessageSegment {
   Data(Bytes)
-  Text(String, Int)
-  Eci(Int)
+  Text(String, Int32)
+  Eci(Int32)
   Fnc1
 }
 
+#derive(Eq)
 pub(all) enum Shape {
   Square
   Rectangle
   Any
   WithDmre
   Dmre
-  Fixed(Int, Int)
-} derive(Eq)
+  Fixed(Int32, Int32)
+}
 pub fn Shape::equal(Self, Self) -> Bool
 pub fn Shape::not_equal(Self, Self) -> Bool
 
 pub struct Symbol {
   // private fields
 }
-pub fn Symbol::height(Self) -> Int
+pub fn Symbol::height(Self) -> Int32
 pub fn Symbol::matrix(Self) -> Array[Array[Bool]]
-pub fn Symbol::module_at(Self, Int, Int) -> Bool?
-pub fn Symbol::width(Self) -> Int
+pub fn Symbol::module_at(Self, Int32, Int32) -> Bool?
+pub fn Symbol::width(Self) -> Int32
 
 // Type aliases
 

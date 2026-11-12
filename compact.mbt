@@ -1,7 +1,7 @@
 // Character maps and packing adapted from datamatrix-rs encodation (MIT).
 
 ///|
-fn c40_values(byte : Int, text : Bool) -> Array[Int] {
+fn c40_values(byte : Int32, text : Bool) -> Array[Int32] {
   let out = []
   let mut c = byte
   if c >= 128 {
@@ -42,7 +42,7 @@ fn c40_values(byte : Int, text : Bool) -> Array[Int] {
 }
 
 ///|
-fn append_triplets(out : Array[Int], values : Array[Int]) -> Unit {
+fn append_triplets(out : Array[Int32], values : Array[Int32]) -> Unit {
   for i = 0; i < values.length(); i = i + 3 {
     let v = 1600 * values[i] + 40 * values[i + 1] + values[i + 2] + 1
     out.push(v >> 8)

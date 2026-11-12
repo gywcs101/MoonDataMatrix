@@ -14,10 +14,10 @@ test "Base256 length boundaries and absolute positions" {
 
 ///|
 fn append_base256(
-  out : Array[Int],
+  out : Array[Int32],
   data : Bytes,
-  start : Int,
-  end : Int,
+  start : Int32,
+  end : Int32,
 ) -> Unit {
   let count = end - start
   out.push(231)

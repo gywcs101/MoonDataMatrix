@@ -1,7 +1,8 @@
 ///|
+#derive(@debug.Debug)
 pub suberror ProtocolError {
   InvalidRequest(String)
-} derive(@debug.Debug)
+}
 
 ///|
 pub extend ProtocolError with @debug.Debug::{to_repr}
@@ -30,8 +31,8 @@ fn keys(
 fn number(
   obj : Map[String, Json],
   key : String,
-  default : Int,
-) -> Int raise ProtocolError {
+  default : Int32,
+) -> Int32 raise ProtocolError {
   match obj.get(key) {
     None => default
     Some(Number(n, ..)) => {

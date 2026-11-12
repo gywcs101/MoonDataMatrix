@@ -5,20 +5,20 @@
 priv struct Encoder {
   data : Bytes
   options : EncodeOptions
-  out : Array[Int]
-  mut pos : Int
-  mut mode : Int
-  mut pending : Int?
-  mut switches : Array[(Int, Int)]
+  out : Array[Int32]
+  mut pos : Int32
+  mut mode : Int32
+  mut pending : Int32?
+  mut switches : Array[(Int32, Int32)]
 }
 
 ///|
-fn Encoder::left(self : Encoder) -> Int {
+fn Encoder::left(self : Encoder) -> Int32 {
   self.data.length() - self.pos
 }
 
 ///|
-fn Encoder::space(self : Encoder, extra : Int) -> Int raise EncodeError {
+fn Encoder::space(self : Encoder, extra : Int32) -> Int32 raise EncodeError {
   match space_left(self.out.length() + extra, self.options) {
     Some(v) => v
     None => raise CapacityExceeded
@@ -32,7 +32,7 @@ fn Encoder::ascii_end(self : Encoder) -> Unit {
 }
 
 ///|
-fn Encoder::eat(self : Encoder) -> Int {
+fn Encoder::eat(self : Encoder) -> Int32 {
   let c = self.data[self.pos].to_int()
   self.pos += 1
   c
@@ -125,8 +125,8 @@ fn Encoder::base256(self : Encoder) -> Unit raise EncodeError {
 ///|
 fn Encoder::c40_end(
   self : Encoder,
-  last : Int,
-  buffer : Array[Int],
+  last : Int32,
+  buffer : Array[Int32],
 ) -> Unit raise EncodeError {
   let switching = self.left() > 0
   if !switching {
@@ -241,7 +241,7 @@ fn Encoder::x12(self : Encoder) -> Unit raise EncodeError {
 ///|
 fn Encoder::edifact_end(
   self : Encoder,
-  symbols : Array[Int],
+  symbols : Array[Int32],
 ) -> Unit raise EncodeError {
   if symbols.length() + self.left() <= 4 {
     let rest = Array::makei(symbols.length() + self.left(), fn(i) {
@@ -309,16 +309,16 @@ fn planned_codewords(
   data : Bytes,
   eci : Bool,
   options : EncodeOptions,
-) -> Array[Int] raise EncodeError {
+) -> Array[Int32] raise EncodeError {
   planned_with_prefix(data, if eci { [241, 27] } else { [] }, options)
 }
 
 ///|
 fn planned_with_prefix(
   data : Bytes,
-  out : Array[Int],
+  out : Array[Int32],
   options : EncodeOptions,
-) -> Array[Int] raise EncodeError {
+) -> Array[Int32] raise EncodeError {
   ignore(select_size(0, options))
   let enc : Encoder = {
     data,

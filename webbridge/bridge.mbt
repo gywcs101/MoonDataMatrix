@@ -3,8 +3,8 @@ pub fn generate(
   input : String,
   hex : Bool,
   shape : String,
-  width : Int,
-  height : Int,
+  width : Int32,
+  height : Int32,
 ) -> String {
   try {
     let shape = match shape {

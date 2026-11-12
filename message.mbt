@@ -1,18 +1,19 @@
 ///|
 pub(all) enum MessageSegment {
   Data(Bytes)
-  Text(String, Int)
-  Eci(Int)
+  Text(String, Int32)
+  Eci(Int32)
   Fnc1
 }
 
 ///|
+#derive(Eq)
 pub(all) struct AppendHeader {
-  index : Int
-  count : Int
-  file_id1 : Int
-  file_id2 : Int
-} derive(Eq)
+  index : Int32
+  count : Int32
+  file_id1 : Int32
+  file_id2 : Int32
+}
 
 ///|
 pub extend AppendHeader with Eq::{equal, not_equal}
@@ -21,18 +22,18 @@ pub extend AppendHeader with Eq::{equal, not_equal}
 pub(all) struct MessageOptions {
   symbol : EncodeOptions
   gs1 : Bool
-  macro_kind : Int
+  macro_kind : Int32
   reader_programming : Bool
   append : AppendHeader?
 }
 
 ///|
 pub fn MessageOptions::new(
-  symbol? : EncodeOptions = { shape: Square, },
-  gs1? : Bool = false,
-  macro_kind? : Int = 0,
-  reader_programming? : Bool = false,
-  append? : AppendHeader? = None,
+  symbol~ : EncodeOptions = { shape: Square, },
+  gs1~ : Bool = false,
+  macro_kind~ : Int32 = 0,
+  reader_programming~ : Bool = false,
+  append~ : AppendHeader? = None,
 ) -> MessageOptions {
   { symbol, gs1, macro_kind, reader_programming, append, }
 }
@@ -50,7 +51,7 @@ fn valid_append(a : AppendHeader) -> Bool {
 }
 
 ///|
-fn append_eci(out : Array[Int], eci : Int) -> Unit raise EncodeError {
+fn append_eci(out : Array[Int32], eci : Int32) -> Unit raise EncodeError {
   if eci < 0 || eci > 999999 {
     raise InvalidOption("ECI must be 0..999999")
   }
@@ -71,7 +72,7 @@ fn append_eci(out : Array[Int], eci : Int) -> Unit raise EncodeError {
 /// Encode explicit protocol segments. Data segments use the active ECI as supplied.
 pub fn encode_message(
   segments : Array[MessageSegment],
-  options? : MessageOptions = MessageOptions::new(),
+  options~ : MessageOptions = MessageOptions::new(),
 ) -> Symbol raise EncodeError {
   let normalized = []
   for segment in segments {
@@ -183,7 +184,7 @@ pub fn encode_message(
 /// Encode a GS1 element string with ASCII GS (29) separating variable-length fields.
 pub fn encode_gs1(
   elements : Bytes,
-  options? : EncodeOptions = { shape: Square, },
+  options~ : EncodeOptions = { shape: Square, },
 ) -> Symbol raise EncodeError {
   let segments = []
   let chunk : Array[Byte] = []
@@ -207,7 +208,7 @@ pub fn encode_gs1(
 /// Recognize a Macro 05/06 envelope and encode its body with a macro header.
 pub fn encode_macro(
   envelope : Bytes,
-  options? : EncodeOptions = { shape: Square, },
+  options~ : EncodeOptions = { shape: Square, },
 ) -> Symbol raise EncodeError {
   let n = envelope.length()
   if n < 9 ||

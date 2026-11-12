@@ -3,8 +3,8 @@
 /// Limits keep dimensions and memory use bounded across all backends.
 pub fn render_svg(
   symbol : Symbol,
-  scale? : Int = 4,
-  quiet_zone? : Int = 2,
+  scale~ : Int32 = 4,
+  quiet_zone~ : Int32 = 2,
 ) -> String raise EncodeError {
   if scale < 1 || scale > 1024 || quiet_zone < 1 || quiet_zone > 1024 {
     raise InvalidOption("scale and quiet zone must be between 1 and 1024")
@@ -34,7 +34,7 @@ pub fn parse_hex(input : String) -> Bytes raise EncodeError {
   if bytes.length() % 2 != 0 {
     raise InvalidOption("hex must contain an even number of digits")
   }
-  fn digit(c : Byte) -> Int raise EncodeError {
+  fn digit(c : Byte) -> Int32 raise EncodeError {
     let n = c.to_int()
     if n >= 48 && n <= 57 {
       n - 48

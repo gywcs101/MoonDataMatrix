@@ -1,5 +1,5 @@
 ///|
-fn tables(eci : Int) -> (Bytes, Bytes) raise CharsetError {
+fn tables(eci : Int32) -> (Bytes, Bytes) raise CharsetError {
   match eci {
     2 => (decode_2, encode_2)
     3 => (decode_3, encode_3)

@@ -1,12 +1,12 @@
 // Adapted from datamatrix-rs placement.rs, IndexTraversal (MIT).
 
 ///|
-fn placement_indices(s : Size) -> Array[Int] {
+fn placement_indices(s : Size) -> Array[Int32] {
   let w = s.width - 2 * s.regions_x
   let h = s.height - 2 * s.regions_y
   let cells = Array::make(w * h, -1)
   let mut pos = 0
-  fn write(points : Array[(Int, Int)]) {
+  fn write(points : Array[(Int32, Int32)]) {
     let value = pos
     pos += 1
     for b in 0..<8 {
@@ -27,7 +27,7 @@ fn placement_indices(s : Size) -> Array[Int] {
       cells[r * w + c] = value * 8 + b
     }
   }
-  fn utah(r : Int, c : Int) {
+  fn utah(r : Int32, c : Int32) {
     write([
       (r - 2, c - 2),
       (r - 2, c - 1),
@@ -126,7 +126,7 @@ fn placement_indices(s : Size) -> Array[Int] {
 }
 
 ///|
-fn place(data : Array[Int], s : Size) -> Symbol {
+fn place(data : Array[Int32], s : Size) -> Symbol {
   let w = s.width - 2 * s.regions_x
   let h = s.height - 2 * s.regions_y
   let cells = placement_indices(s).map(fn(i) {

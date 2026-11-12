@@ -23,7 +23,7 @@ MoonBit 实现的 **Data Matrix 编解码库**，附原生命令行工具和完�
 
 ## 快速开始
 
-源码运行环境：`moonc v0.10.14+7d59c7ec9`、`moon 0.1.20260920`。CLI 使用 `moonbitlang/x@0.5.4`，编码核心仅依赖标准库。
+源码运行环境：`moonc v0.10.20+65efd5b93`、`moon 0.1.20261104`。Windows 原生构建需要 MSVC C++ 工具和 Windows SDK。CLI 使用 `moonbitlang/x@0.5.4`，编码核心仅依赖标准库。
 
 ```sh
 git clone https://github.com/gywcs101/MoonDataMatrix.git

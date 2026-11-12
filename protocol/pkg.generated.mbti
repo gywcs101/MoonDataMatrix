@@ -4,25 +4,27 @@ package "gywcs101/MoonDataMatrix/protocol"
 import {
   "gywcs101/MoonDataMatrix",
   "moonbitlang/core/debug",
+  "moonbitlang/core/json",
 }
 
 // Values
-pub fn decoded_json(@MoonDataMatrix.DecodedMessage) -> Json
+pub fn decoded_json(@MoonDataMatrix.DecodedMessage) -> @json.Json
 
-pub fn encode_request(Json) -> Array[@MoonDataMatrix.Symbol] raise
+pub fn encode_request(@json.Json) -> Array[@MoonDataMatrix.Symbol] raise
 
-pub fn matrix(Json) -> Array[Array[Bool]] raise ProtocolError
+pub fn matrix(@json.Json) -> Array[Array[Bool]] raise ProtocolError
 
 pub fn process(String, String) -> String raise
 
-pub fn symbol_json(@MoonDataMatrix.Symbol) -> Json raise
+pub fn symbol_json(@MoonDataMatrix.Symbol) -> @json.Json raise
 
 pub fn user_error(Error) -> String
 
 // Errors
+#derive(@debug.Debug)
 pub suberror ProtocolError {
   InvalidRequest(String)
-} derive(@debug.Debug)
+}
 pub fn ProtocolError::to_repr(Self) -> @debug.Repr
 
 // Types and methods

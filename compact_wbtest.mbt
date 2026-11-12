@@ -12,7 +12,7 @@ test "C40 Text shift tables and triplet vector" {
 }
 
 ///|
-fn compact_candidate(data : Bytes, text : Bool) -> Array[Int] {
+fn compact_candidate(data : Bytes, text : Bool) -> Array[Int32] {
   let values = []
   let mut boundary = 0
   let mut value_boundary = 0

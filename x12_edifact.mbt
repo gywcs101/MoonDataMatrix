@@ -1,7 +1,7 @@
 // Adapted from datamatrix-rs X12 and EDIFACT packing rules (MIT).
 
 ///|
-fn x12_value(c : Int) -> Int? {
+fn x12_value(c : Int32) -> Int32? {
   if c == 13 {
     Some(0)
   } else if c == 42 {
@@ -20,7 +20,7 @@ fn x12_value(c : Int) -> Int? {
 }
 
 ///|
-fn append_edifact(out : Array[Int], values : Array[Int]) -> Unit {
+fn append_edifact(out : Array[Int32], values : Array[Int32]) -> Unit {
   for i = 0; i < values.length(); i = i + 4 {
     let n = values.length() - i
     let a = values[i] & 63

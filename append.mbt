@@ -2,10 +2,10 @@
 /// Split raw bytes into independently decodable symbols with a shared file ID.
 pub fn encode_append_bytes(
   data : Bytes,
-  file_id1 : Int,
-  file_id2 : Int,
-  options? : EncodeOptions = { shape: Square, },
-  eci? : Int? = None,
+  file_id1 : Int32,
+  file_id2 : Int32,
+  options~ : EncodeOptions = { shape: Square, },
+  eci~ : Int32? = None,
 ) -> Array[Symbol] raise EncodeError {
   if !valid_append({ index: 1, count: 2, file_id1, file_id2, }) {
     raise InvalidOption("invalid append file ID")
@@ -107,9 +107,9 @@ pub fn encode_append_bytes(
 /// Split UTF-8 text only between complete Unicode characters.
 pub fn encode_append_text(
   text : String,
-  file_id1 : Int,
-  file_id2 : Int,
-  options? : EncodeOptions = { shape: Square, },
+  file_id1 : Int32,
+  file_id2 : Int32,
+  options~ : EncodeOptions = { shape: Square, },
 ) -> Array[Symbol] raise EncodeError {
   if !valid_append({ index: 1, count: 2, file_id1, file_id2, }) {
     raise InvalidOption("invalid append file ID")

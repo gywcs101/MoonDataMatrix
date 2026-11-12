@@ -1,13 +1,14 @@
 // Data decoding adapted from datamatrix-rs src/decodation (MIT).
 
 ///|
+#derive(@debug.Debug)
 pub suberror DecodeError {
   InvalidMatrix(String)
   UnsupportedMatrixSize
   CorrectionFailed
   InvalidCodeword(String)
   InvalidText
-} derive(@debug.Debug)
+}
 
 ///|
 pub extend DecodeError with @debug.Debug::{to_repr}
@@ -15,13 +16,13 @@ pub extend DecodeError with @debug.Debug::{to_repr}
 ///|
 pub struct DecodedMessage {
   priv payload : Bytes
-  priv ecis : Array[(Int, Int)]
+  priv ecis : Array[(Int32, Int32)]
   gs1 : Bool
-  macro_kind : Int
+  macro_kind : Int32
   reader_programming : Bool
   append : AppendHeader?
-  priv separators : Array[Int]
-  corrected_codewords : Int
+  priv separators : Array[Int32]
+  corrected_codewords : Int32
 }
 
 ///|
@@ -30,14 +31,16 @@ pub fn DecodedMessage::bytes(self : DecodedMessage) -> Bytes {
 }
 
 ///|
-pub fn DecodedMessage::eci_changes(self : DecodedMessage) -> Array[(Int, Int)] {
+pub fn DecodedMessage::eci_changes(
+  self : DecodedMessage,
+) -> Array[(Int32, Int32)] {
   self.ecis.copy()
 }
 
 ///|
 pub fn DecodedMessage::text(self : DecodedMessage) -> String raise DecodeError {
   let out = StringBuilder()
-  fn chunk(start : Int, end : Int, eci : Int) -> Unit raise DecodeError {
+  fn chunk(start : Int32, end : Int32, eci : Int32) -> Unit raise DecodeError {
     let mut pos = start
     for sep in self.separators {
       if sep < start || sep >= end {
@@ -87,12 +90,12 @@ pub fn DecodedMessage::text(self : DecodedMessage) -> String raise DecodeError {
 
 ///|
 priv struct CodeReader {
-  data : Array[Int]
-  mut pos : Int
+  data : Array[Int32]
+  mut pos : Int32
 }
 
 ///|
-fn CodeReader::take(self : CodeReader) -> Int raise DecodeError {
+fn CodeReader::take(self : CodeReader) -> Int32 raise DecodeError {
   if self.pos >= self.data.length() {
     raise InvalidCodeword("truncated data")
   }
@@ -102,12 +105,12 @@ fn CodeReader::take(self : CodeReader) -> Int raise DecodeError {
 }
 
 ///|
-fn CodeReader::left(self : CodeReader) -> Int {
+fn CodeReader::left(self : CodeReader) -> Int32 {
   self.data.length() - self.pos
 }
 
 ///|
-fn CodeReader::unrandom(self : CodeReader) -> Int raise DecodeError {
+fn CodeReader::unrandom(self : CodeReader) -> Int32 raise DecodeError {
   let value = self.take() - (149 * self.pos % 255 + 1)
   if value < 0 {
     value + 256
@@ -118,8 +121,8 @@ fn CodeReader::unrandom(self : CodeReader) -> Int raise DecodeError {
 
 ///|
 fn decode_data(
-  data : Array[Int],
-  corrected : Int,
+  data : Array[Int32],
+  corrected : Int32,
 ) -> DecodedMessage raise DecodeError {
   let r = CodeReader::{ data, pos: 0, }
   let out : Array[Byte] = []
@@ -422,6 +425,6 @@ pub fn decode_matrix(
 }
 
 ///|
-pub fn DecodedMessage::fnc1_positions(self : DecodedMessage) -> Array[Int] {
+pub fn DecodedMessage::fnc1_positions(self : DecodedMessage) -> Array[Int32] {
   self.separators.copy()
 }
